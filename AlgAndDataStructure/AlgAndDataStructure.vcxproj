@@ -142,6 +142,7 @@
     <ClInclude Include="inc\sort.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DivideAndConcure.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\sort\sort.cpp" />
   </ItemGroup>

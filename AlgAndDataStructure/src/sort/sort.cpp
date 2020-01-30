@@ -8,8 +8,10 @@
 void bubble_sort(int len,  uint32_t array[]) {
     uint32_t temp = 0;
     int i = 0, j = 0;
+    //循环len次冒泡
     for (j = len - 1; j > 0; j--)
     {
+        //每次冒泡的时候需要交换/比较的次数j
 		for (i = 0; i < j; i++)
 		{
 			if (array[i] > array[i + 1])
