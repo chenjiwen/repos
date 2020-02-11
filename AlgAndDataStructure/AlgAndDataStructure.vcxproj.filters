@@ -18,6 +18,24 @@
     <ClInclude Include="inc\sort.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="inc\binary_heap.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\PriorQueue.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\stack.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\common.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\btree.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\queue.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\sort\sort.cpp">
@@ -27,6 +45,24 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="DivideAndConcure.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\string\string.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sort\binary_heap.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sort\priorityQue.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\stack\stack.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\btree\btree.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\queue\queue.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

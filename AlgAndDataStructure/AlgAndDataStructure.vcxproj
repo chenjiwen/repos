@@ -139,12 +139,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="inc\binary_heap.h" />
+    <ClInclude Include="inc\btree.h" />
+    <ClInclude Include="inc\common.h" />
+    <ClInclude Include="inc\PriorQueue.h" />
+    <ClInclude Include="inc\queue.h" />
     <ClInclude Include="inc\sort.h" />
+    <ClInclude Include="inc\stack.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DivideAndConcure.cpp" />
+    <ClCompile Include="src\btree\btree.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\queue\queue.cpp" />
+    <ClCompile Include="src\sort\binary_heap.cpp" />
+    <ClCompile Include="src\sort\priorityQue.cpp" />
     <ClCompile Include="src\sort\sort.cpp" />
+    <ClCompile Include="src\stack\stack.cpp" />
+    <ClCompile Include="src\string\string.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

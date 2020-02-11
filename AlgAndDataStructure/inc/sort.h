@@ -3,7 +3,9 @@
 #define __SORT_H__
 
 #include <cstdint>
-
+#include <string>
+using namespace std;
+#include "binary_heap.h"
 
 extern void bubble_sort(int len,  uint32_t array[]);
 extern void insertion_sort(int len, uint32_t array[]);
@@ -12,5 +14,8 @@ extern void merge_sort(int array_len, uint32_t array[]);
 extern void quick_sort(int left, int right, uint32_t array[]);
 extern void selecion_sort(int len, uint32_t array[]);
 extern int find_max_sum_subsequence(int num_array[], int start, int end, int record_index[2]);
+extern uint32_t select_kth(int k, int left, int right, uint32_t array[]);
+
+extern string longestPalindrome(string s);
 
 #endif /*__SORT_H__*/

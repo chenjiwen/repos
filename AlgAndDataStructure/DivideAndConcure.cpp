@@ -62,11 +62,11 @@ int find_max_sum_subsequence(int num_array[], int start, int end, int record_ind
 	int right_record[2];
 	int accross_record[2];
 
-	//只有一个元素的情况，递归结束条件
+	//只有一个元素的情况，递归结束
 	if (start == end)
 	{
 		record_index[0] = start;
-		right_record[1] = end;
+		record_index[1] = end;
 		return num_array[start];
 	}
 
@@ -100,4 +100,29 @@ int find_max_sum_subsequence(int num_array[], int start, int end, int record_ind
 		return sum_accross_max;
 	}
 
+}
+
+void ComplexNumMultple(double a, double b, double c, double d)
+{
+	double x = 0, y = 0, z = 0;
+	double real = 0, img = 0;
+
+	x = (a - b) * (c + d);
+	y = (a + b) * (c - d);
+	z = (a + b) * (c + d);
+
+	/*
+	 *  (a+bi)*(c+di)=(ac - bd) + (ad + bc)i
+	 *   ac - bd = (a - b)*(c + d) - (ad - bc) = x - (y - z)/2
+	 *   ad + bc = (a + b)*(c + d) - (ac + bd) = x - (y + z)/2
+	 *
+	 *   x = (a - b)*(c + d) = ac + ad - bc - bd
+	 *   y = (a + b)*(c + d) = ac + ad - bc + bd
+	 *   z = (a + b)*(c - d) = ac - ad + bc - bd
+	 *   ad - bc = (y - z)/2 = (y - z) >> 1
+	 *   ac + bd = (y + z)/2 = (y + z) >> 1
+	 */
+
+	real = x - ((y - z)/2);
+	img  = x - ((y + z)/2);
 }
