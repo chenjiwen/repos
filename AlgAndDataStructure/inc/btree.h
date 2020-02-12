@@ -120,6 +120,7 @@ public:
 protected:
 	void set_root(const BTreeNode* pRootNode);
 	void set_tree_type(BinaryTreeType type);
+	BinaryTreeType get_tree_type();
 
 	BTreeNode* pBTreeNil;
 
@@ -191,7 +192,7 @@ public:
 	BTreeNode* BSTree_Successor(BTreeNode *pNode);
 	BTreeNode* BSTree_Predecessor(BTreeNode* pNode);
 
-	void BSTree_Insert(BTreeNode* pBSTree, BTreeNode* pNode);
+	virtual void BSTree_Insert(BTreeNode* pNode);
 	void BSTree_Insert_Recursive(BTreeNode* pBSTree, BTreeNode* pNode);
 
 	void BSTree_Delete(BTreeNode* pNode, DeleteNodeType replace = DELETED_NODE_BY_PRE);
@@ -211,11 +212,14 @@ public:
 	void RBTreeLeftRotate(BTreeNode *pNode);
 	void RBTreeRightRotate(BTreeNode* pNode);
 	void RBTreeInsert(BTreeNode* pNodeZ);
+	void RBTreeDelete(BTreeNode* pNodeZ);
+	void BSTree_Insert(BTreeNode* pNode);
 
 	static BTreeNode RBTreeNIL; //static成员在类里面声明,在类外定义
 
 private:
 	void RBTree_Insert_Fixup(BTreeNode* pNode);
+	void RBTreeDeleteFixUp(BTreeNode* pNode);
 
 private:
 	BTreeNode *RBTreeNil;/*sentential哨兵*/

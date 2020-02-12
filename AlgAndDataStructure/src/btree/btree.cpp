@@ -15,7 +15,7 @@ BTree::BTree(const vector<BTreeElemType>& vec_elem, BinaryTreeType type):tree_ty
 
 }
 
-BTree::BTree(const BTreeNode* pNode, BinaryTreeType type):root((BTreeNode*)pNode), tree_type(type),pBTreeNil(NULL){
+BTree::BTree(const BTreeNode* pNode, BinaryTreeType type):root((BTreeNode*)pNode), tree_type(type),pBTreeNil((BTreeNode*)pNode){
 
 }
 
@@ -45,7 +45,7 @@ bool BTree::is_rchild_node(const BTreeNode* pNode) {
 }
 
 bool BTree::is_root_node(const BTreeNode* pNode) {
-	return pNode->parent == NULL;
+	return pNode->parent == pBTreeNil;
 }
 
 void BTree::set_root(const BTreeNode* pRootNode) {
@@ -58,6 +58,10 @@ BTreeNode* BTree::get_root() {
 
 void BTree::set_tree_type(BinaryTreeType type) {
 	tree_type = type;
+}
+
+BinaryTreeType BTree::get_tree_type() {
+	return tree_type;
 }
 
 bool BTree::is_lchild(const BTreeNode* pNode, const BTreeNode* parent) {
@@ -73,7 +77,7 @@ bool BTree::is_rchild(const BTreeNode* pNode, const BTreeNode* parent) {
 }
 
 bool BTree::is_node_descendant(const BTreeNode* descendant, const BTreeNode* ancestor) {
-	BTreeNode* parent = NULL;
+	BTreeNode* parent = pBTreeNil;
 
 	if (pBTreeNil == descendant)
 	{
@@ -127,8 +131,8 @@ void BTree::btree_inorder_traverse_non_recursive() {
  */
 void BTree::btree_inorder_traverse_non_recursive_1(const BTreeNode* btree) {
 	vector<BTreeNode*> stack;
-	BTreeNode* pNode = NULL;
-	BTreeNode* prevNode = NULL;
+	BTreeNode* pNode = pBTreeNil;
+	BTreeNode* prevNode = pBTreeNil;
 
 	pNode = (BTreeNode*)btree;
 
@@ -179,8 +183,8 @@ void BTree::btree_inorder_traverse_non_recursive_1(const BTreeNode* btree) {
 
 void BTree::btree_inorder_traverse_non_recursive(const BTreeNode* btree) {
 	vector<BTreeNode*> stack;
-	BTreeNode* pNode = NULL;
-	BTreeNode* prevNode = NULL;
+	BTreeNode* pNode = pBTreeNil;
+	BTreeNode* prevNode = pBTreeNil;
 
 	pNode = (BTreeNode*)btree;
 
@@ -273,8 +277,8 @@ void BTree::btree_postorder_traverse(const BTreeNode* btree) {
  */
 void BTree::btree_postorder_traverse_non_recursive() {
 	vector<BTreeNode*> stack;
-	BTreeNode* pNode = NULL;
-	BTreeNode* prevNode = NULL;
+	BTreeNode* pNode = pBTreeNil;
+	BTreeNode* prevNode = pBTreeNil;
 
 	pNode = (BTreeNode*)root;
 
@@ -330,8 +334,8 @@ void BTree::btree_build() {
 
 void BTree::btree_traverse_level() {
 	vector<BTreeNode*> queue;
-	BTreeNode* pNode = NULL;
-	BTreeNode* prevNode = NULL;
+	BTreeNode* pNode = pBTreeNil;
+	BTreeNode* prevNode = pBTreeNil;
 
 }
 
@@ -362,16 +366,16 @@ BTreeNode* ExprTree::build_expr_tree_postorder(const BTreeElemType elem_array[],
 		{
 			pNode = new BTreeNode;
 			pNode->elem = elem_array[i];
-			pNode->parent = NULL;
-			pNode->lchild = NULL;
-			pNode->rchild = NULL;
+			pNode->parent = pBTreeNil;
+			pNode->lchild = pBTreeNil;
+			pNode->rchild = pBTreeNil;
 			stack.push_back(pNode);
 		}
 		else 
 		{
 			pNode = new BTreeNode;
 			pNode->elem = elem_array[i];
-			pNode->parent = NULL;
+			pNode->parent = pBTreeNil;
 			pNode->rchild = stack.back();
 			pNode->rchild->parent = pNode;
 
@@ -438,7 +442,7 @@ BTreeNode* BSTree::BSTree_search(const BTreeNode* pBSTree, BTreeElemType key) {
 }
 
 BTreeNode* BSTree::BSTree_search_iteration(BTreeElemType key) {
-	BTreeNode* pBSTreeNode = NULL;
+	BTreeNode* pBSTreeNode = pBTreeNil;
 
 	pBSTreeNode = get_root();
 	while ((pBSTreeNode != pBTreeNil) && (pBSTreeNode->elem != key))
@@ -466,7 +470,7 @@ BTreeNode* BSTree::BSTree_Minimum(BTreeNode* pBSTreeNode) {
 }
 
 BTreeNode* BSTree::BSTree_Minimum() {
-	BTreeNode* pBSTreeNode = NULL;
+	BTreeNode* pBSTreeNode = pBTreeNil;
 	pBSTreeNode = get_root();
 
 	while ((pBSTreeNode != pBTreeNil) && (pBTreeNil != pBSTreeNode->lchild))
@@ -478,7 +482,7 @@ BTreeNode* BSTree::BSTree_Minimum() {
 }
 
 BTreeNode* BSTree::BSTree_Maximum() {
-	BTreeNode* pBSTreeNode = NULL;
+	BTreeNode* pBSTreeNode = pBTreeNil;
 	pBSTreeNode = get_root();
 
 	while ((pBSTreeNode != pBTreeNil) && (pBTreeNil != pBSTreeNode->rchild))
@@ -499,7 +503,7 @@ BTreeNode* BSTree::BSTree_Maximum(BTreeNode* pBSTreeNode) {
 }
 
 BTreeNode* BSTree::BSTree_Successor(BTreeNode* pNode){
-	BTreeNode* pBSTreeNode = NULL;
+	BTreeNode* pBSTreeNode = pBTreeNil;
 
 	if (pNode->rchild != pBTreeNil)
 	{
@@ -517,7 +521,7 @@ BTreeNode* BSTree::BSTree_Successor(BTreeNode* pNode){
 }
 
 BTreeNode* BSTree::BSTree_Predecessor(BTreeNode* pNode) {
-	BTreeNode* pBSTreeNode = NULL;
+	BTreeNode* pBSTreeNode = pBTreeNil;
 
 	if (pNode->lchild != pBTreeNil)
 	{
@@ -534,11 +538,11 @@ BTreeNode* BSTree::BSTree_Predecessor(BTreeNode* pNode) {
 	return pBSTreeNode;
 }
 
-void BSTree::BSTree_Insert(BTreeNode* pBSTree, BTreeNode* pNode) {
-	BTreeNode* pTempNodeX = NULL;
-	BTreeNode* pTempNodeY = NULL;
+void BSTree::BSTree_Insert(BTreeNode* pNode) {
+	BTreeNode* pTempNodeX = pBTreeNil;
+	BTreeNode* pTempNodeY = pBTreeNil;
 
-	pTempNodeX = pBSTree;
+	pTempNodeX = get_root();
 	while (pTempNodeX != pBTreeNil)
 	{
 		pTempNodeY = pTempNodeX;
@@ -552,7 +556,7 @@ void BSTree::BSTree_Insert(BTreeNode* pBSTree, BTreeNode* pNode) {
 		}
 	}
 	pNode->parent = pTempNodeY;
-	if (pTempNodeX == pBTreeNil)
+	if (pTempNodeY == pBTreeNil)
 	{
 		set_root(pNode);
 	}
@@ -604,7 +608,7 @@ void BSTree::BSTree_Insert_Recursive(BTreeNode* pBSTree, BTreeNode* pNode) {
  *    pNodeV is child of parent of pNodeU
  */
 void BSTree::BSTree_Transplant(BTreeNode* pNodeU, BTreeNode* pNodeV) {
-	if (pNodeU->parent != pBTreeNil)
+	if (pNodeU->parent == pBTreeNil)
 	{
 		set_root(pNodeV);
 	}
@@ -617,20 +621,24 @@ void BSTree::BSTree_Transplant(BTreeNode* pNodeU, BTreeNode* pNodeV) {
 		pNodeU->parent->rchild = pNodeV;
 	}
 
-	if (pNodeV)
+	if (get_tree_type() == BTREE_RB)
+	{
+		pNodeV->parent = pNodeU->parent;
+	}
+	else if (pNodeV != pBTreeNil)
 	{
 		pNodeV->parent = pNodeU->parent;
 	}
 }
 
 void BSTree::BSTree_Delete(BTreeNode* pNode, DeleteNodeType replaceBy) {
-	BTreeNode* pTempNodeY = NULL;
+	BTreeNode* pTempNodeY = pBTreeNil;
 
-	if (!pNode->lchild)
+	if (pBTreeNil != pNode->lchild)
 	{
 		BSTree_Transplant(pNode, pNode->rchild);
 	}
-	else if (!pNode->rchild)
+	else if (pBTreeNil != pNode->rchild)
 	{
 		BSTree_Transplant(pNode, pNode->lchild);
 	}
@@ -679,15 +687,15 @@ void BSTree::BSTree_Delete(BTreeNode* pNode, DeleteNodeType replaceBy) {
  *static成员可以作为默认实参
  */
 BTreeNode RBTree::RBTreeNIL = { RBTreeNode_Blk, -1, NULL, NULL,NULL };
-RBTree::RBTree():RBTreeNil(&(RBTree::RBTreeNIL)), BSTree(NULL, BTREE_RB)
+RBTree::RBTree():RBTreeNil(&(RBTree::RBTreeNIL)), BSTree(&(RBTree::RBTreeNIL), BTREE_RB)
 {
-	set_root(RBTreeNil);
+	//set_root(RBTreeNil);
 }
 
-RBTree::RBTree(const BTreeElemType elem_array[], int len): RBTreeNil(&(RBTree::RBTreeNIL)), BSTree(NULL, BTREE_RB)
+RBTree::RBTree(const BTreeElemType elem_array[], int len): RBTreeNil(&(RBTree::RBTreeNIL)), BSTree(&(RBTree::RBTreeNIL), BTREE_RB)
 {
 	int i = 0;
-	BTreeNode* pNode = NULL;
+	BTreeNode* pNode = pBTreeNil;
 	set_root(RBTreeNil);
 	for (i = 0; i < len; i++)
 	{
@@ -697,7 +705,7 @@ RBTree::RBTree(const BTreeElemType elem_array[], int len): RBTreeNil(&(RBTree::R
 		pNode->lchild = RBTreeNil;
 		pNode->rchild = RBTreeNil;
 		pNode->parent = RBTreeNil;
-		RBTreeInsert(pNode);
+		BSTree_Insert(pNode);
 	}
 }
 
@@ -707,8 +715,8 @@ RBTree::~RBTree()
 }
 
 void RBTree::RBTreeLeftRotate(BTreeNode* pNode) {
-	BTreeNode* pTempNodeY = NULL;
-	BTreeNode* pRBTreeRoot = NULL;
+	BTreeNode* pTempNodeY = pBTreeNil;
+	BTreeNode* pRBTreeRoot = pBTreeNil;
 
 	pRBTreeRoot = get_root();
 	pTempNodeY = pNode->rchild;
@@ -744,8 +752,8 @@ void RBTree::RBTreeLeftRotate(BTreeNode* pNode) {
 }
 
 void RBTree::RBTreeRightRotate(BTreeNode* pNodeX) {
-	BTreeNode* pNodeY = NULL;
-	BTreeNode* pRBTreeRoot = NULL;
+	BTreeNode* pNodeY = pBTreeNil;
+	BTreeNode* pRBTreeRoot = pBTreeNil;
 
 	pRBTreeRoot = get_root();
 
@@ -877,14 +885,13 @@ void RBTree::RBTree_Insert_Fixup(BTreeNode* pNode) {
 				//move pNode to grandpa
 				pNode = pNode->parent->parent;
 			}
-			else if (pNode == pNode->parent->rchild)
+			else 
 			{
-				pNode = pNode->parent;
-				RBTreeLeftRotate(pNode);
-			}
-			else
-			{
-				//叔父是黑色
+				if (pNode == pNode->parent->rchild) 
+				{
+					pNode = pNode->parent;
+					RBTreeLeftRotate(pNode);
+				}
 				pNode->parent->color = RBTreeNode_Blk;
 				pNode->parent->parent->color = RBTreeNode_Red;
 				RBTreeRightRotate(pNode->parent->parent);
@@ -900,13 +907,14 @@ void RBTree::RBTree_Insert_Fixup(BTreeNode* pNode) {
 				pNode->parent->parent->color = RBTreeNode_Red;
 				pNode = pNode->parent->parent;
 			}
-			else if (pNode == pNode->parent->lchild)
+			else 
 			{
-				pNode = pNode->parent;
-				RBTreeRightRotate(pNode);
-			}
-			else
-			{
+				if (pNode == pNode->parent->lchild) 
+				{
+					pNode = pNode->parent;
+					RBTreeRightRotate(pNode);
+				}
+
 				pNode->parent->color = RBTreeNode_Blk;
 				pNode->parent->parent->color = RBTreeNode_Red;
 				RBTreeLeftRotate(pNode->parent->parent);
@@ -918,9 +926,9 @@ void RBTree::RBTree_Insert_Fixup(BTreeNode* pNode) {
 }
 
 void RBTree::RBTreeInsert(BTreeNode* pNodeZ) {
+#if 0
 	BTreeNode* pTempY = RBTreeNil;
 	BTreeNode* pTempX = get_root();
-
 	while ( pTempX != RBTreeNil)
 	{
 		pTempY = pTempX;
@@ -947,9 +955,163 @@ void RBTree::RBTreeInsert(BTreeNode* pNodeZ) {
 	{
 		pTempY->rchild = pNodeZ;
 	}
-
+#else
+	BSTree::BSTree_Insert(pNodeZ);
+#endif
 	pNodeZ->lchild = RBTreeNil;
 	pNodeZ->rchild = RBTreeNil;
 	pNodeZ->color = RBTreeNode_Red;
 	RBTree_Insert_Fixup(pNodeZ);
+}
+
+void RBTree::BSTree_Insert(BTreeNode* pNodeZ) {
+	BSTree::BSTree_Insert(pNodeZ);
+	pNodeZ->lchild = RBTreeNil;
+	pNodeZ->rchild = RBTreeNil;
+	pNodeZ->color = RBTreeNode_Red;
+	RBTree_Insert_Fixup(pNodeZ);
+}
+
+
+void RBTree::RBTreeDeleteFixUp(BTreeNode* pNodeX) {
+	BTreeNode* pNodeW = pBTreeNil;
+
+	while ((pNodeX != get_root()) && (pNodeX->color == RBTreeNode_Blk))
+	{
+		if (is_lchild_node(pNodeX))
+		{
+			//由于被替换/删除的节点是一个黑色节点，性质4/5或被破坏
+			pNodeW = pNodeX->parent->rchild;
+			if (pNodeW->color == RBTreeNode_Red)
+			{
+				//case 1
+				//如果pNodeX的右兄弟是红色，把w着色为黑色，父节点着色为红色，沿着x的父节点把树左旋：
+				//1. 左旋可以保持w及其子树的性质不变
+				//2. 同时把处理的情况转换成case2/3/4后继续处理
+				pNodeW->color = RBTreeNode_Blk;
+				pNodeX->parent->color = RBTreeNode_Red;
+				RBTreeLeftRotate(pNodeX->parent);
+				pNodeW = pNodeX->parent->rchild;
+			}
+			else if ((pNodeW->lchild->color == RBTreeNode_Blk) && (pNodeW->rchild->color == RBTreeNode_Blk))
+			{
+				//case 2
+				//左右孩子都是黑色，把w置为红色，p设置为父节点，由于父节点为红色，不满足循环条件
+				//在退出循环的时候会把父节点置为黑色来补偿
+				pNodeW->color = RBTreeNode_Red;
+				pNodeX = pNodeX->parent;
+			}
+			else 
+			{
+				if (pNodeW->rchild->color == RBTreeNode_Blk) {
+					//case3
+					//左孩子着色为黑色后，黑高度升高了1，需要右转保持黑高度不变，同时变成case4
+					pNodeW->lchild->color = RBTreeNode_Blk;
+					pNodeW->color = RBTreeNode_Red;
+					RBTreeRightRotate(pNodeW);
+					pNodeW = pNodeX->parent->rchild;
+				}
+				//case4
+				//只需要基于x的父节点做一次右旋，同时修改w->
+				pNodeW->color = pNodeX->parent->color;
+				pNodeX->parent->color = RBTreeNode_Blk;
+				pNodeX->rchild->color = RBTreeNode_Blk;
+				RBTreeLeftRotate(pNodeX->parent);
+				pNodeX = get_root();
+			}	
+		}
+		else
+		{
+			pNodeW = pNodeX->parent->lchild;
+			if (pNodeW->color == RBTreeNode_Red)
+			{
+				pNodeW->color = RBTreeNode_Blk;
+				pNodeX->parent->color = RBTreeNode_Red;
+				RBTreeLeftRotate(pNodeX->parent);
+				pNodeW = pNodeX->parent->lchild;
+			}
+			else if ((pNodeW->lchild->color == RBTreeNode_Blk) && (pNodeW->rchild->color == RBTreeNode_Blk))
+			{
+				pNodeW->color = RBTreeNode_Red;
+				pNodeX = pNodeX->parent;
+			}
+			else
+			{
+				if (pNodeW->lchild->color == RBTreeNode_Blk) 
+				{
+					//左孩子着色为黑色后，黑高度升高了1，需要右转保持黑高度不变
+					pNodeW->rchild->color = RBTreeNode_Blk;
+					pNodeW->color = RBTreeNode_Red;
+					RBTreeLeftRotate(pNodeW);
+					pNodeW = pNodeX->parent->lchild;
+
+				}
+				pNodeW->color = pNodeX->parent->color;
+				pNodeX->parent->color = RBTreeNode_Blk;
+				pNodeX->lchild->color = RBTreeNode_Blk;
+				RBTreeRightRotate(pNodeX->parent);
+				pNodeX = get_root();
+			}
+		}
+	}
+	pNodeX->color = RBTreeNode_Blk;
+}
+/*
+ *节点Z为待删除的节点
+ */
+void RBTree::RBTreeDelete(BTreeNode* pNodeZ) {
+	BTreeNode* pNodeY = pBTreeNil;
+	RBTreeNodeType NodeYOrgColor;
+	BTreeNode* pNodeX = pBTreeNil;
+
+	pNodeY = pNodeZ;
+	NodeYOrgColor = pNodeY->color;
+
+	
+	if (pNodeZ->lchild == pBTreeNil)
+	{
+		//case 1
+		//节点Z只有右孩子的时候，把节点的右子树替代节点Z
+		pNodeX = pNodeZ->rchild;
+		BSTree_Transplant(pNodeZ, pNodeZ->rchild);
+	}
+	else if (pNodeZ->rchild == pBTreeNil)
+	{
+		//case2
+		//节点Z只有左孩子的时候，把节点的左子树替代节点Z
+		pNodeX = pNodeZ->lchild;
+		BSTree_Transplant(pNodeZ, pNodeZ->lchild);
+	}
+	else
+	{
+		//节点有左右子树的时候，用它的后继来替代节点Z
+		pNodeY = BSTree_Minimum(pNodeZ->rchild);
+		NodeYOrgColor = pNodeY->color;
+
+		//X记录后继节点的右孩子，因为X需要去替换节点Y，也会破坏红黑树的性质
+		pNodeX = pNodeY->rchild;
+		if (pNodeY->parent == pNodeZ)
+		{
+			pNodeX->parent = pNodeY;
+		}
+		else
+		{
+			//后继节点不是Z的右孩子时候，需要用X替换Y，这个过程也会破坏红黑树的性质4/5
+			BSTree_Transplant(pNodeY, pNodeY->rchild);
+			pNodeY->rchild = pNodeZ->rchild;
+			pNodeY->rchild->parent = pNodeY;
+		}
+
+		BSTree_Transplant(pNodeZ, pNodeY);
+		pNodeY->lchild = pNodeZ->lchild;
+		pNodeY->lchild->parent = pNodeY;
+		//Y替代了Z，同时把Y的颜色置为Z的颜色，保持Z的左上半部性质不变，情况就变成case1/case2
+		pNodeY->color = pNodeZ->color;
+	}
+
+	//只有删除一个黑色节点的时候才会破坏红黑树的性质,需要调整红黑树
+	if (NodeYOrgColor == RBTreeNode_Blk)
+	{
+		RBTreeDeleteFixUp(pNodeX);
+	}
 }

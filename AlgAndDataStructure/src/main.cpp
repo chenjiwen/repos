@@ -62,7 +62,16 @@ int main(int argc, char **argv) {
 	bstee.btree_inorder_traverse();
 
 	BTreeElemType RBTreeElemArray[] = { 41, 38, 31, 12, 19, 8 };
+	BTreeElemType RBTreeDelElemArray[] = { 8, 12, 19, 31, 38, 41 };
 	RBTree rbtree(RBTreeElemArray,6);
+
+	BTreeNode* pNode = NULL;
+	for (int i = 0; i < 6; i++)
+	{
+		pNode = rbtree.BSTree_search(RBTreeDelElemArray[i]);
+		rbtree.RBTreeDelete(pNode);
+		delete pNode;
+	}
 
 	bheap.dump_heap();
 
