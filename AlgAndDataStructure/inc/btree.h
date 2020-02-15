@@ -10,16 +10,18 @@ typedef int BTreeElemType;
 
 typedef enum BinaryTreeType
 {
-	BTREE_DEFAULT,
+	BTREE_DEFAULT = 0,
 	BTREE_SEARCH = BTREE_DEFAULT,
 	BTREE_EXPR,
-	BTREE_RB
+	BTREE_RB,
+	BTREE_AVL
 }BinaryTreeType;
 
 typedef enum RBTreeNodeType
 {
 	RBTreeNode_Red,
-	RBTreeNode_Blk
+	RBTreeNode_Blk,
+	RBTreeNode_MAX
 }RBTreeNodeType;
 
 typedef struct  BTreeNode
@@ -117,6 +119,8 @@ public:
 	virtual void btree_build();
 	//virtual bool operator!();
 
+	void destroy_btree(BTreeNode* btree);
+
 protected:
 	void set_root(const BTreeNode* pRootNode);
 	void set_tree_type(BinaryTreeType type);
@@ -163,7 +167,7 @@ typedef enum {
 class BSTree : public BTree
 {
 public:
-	BSTree();
+	BSTree(BinaryTreeType type = BTREE_DEFAULT);
 	~BSTree();
 	explicit BSTree(const BTreeNode* pBSTree, BinaryTreeType type);
 	explicit BSTree(const BTreeElemType elem_array[], int len);
@@ -200,8 +204,21 @@ public:
 	
 protected:
 	void BSTree_Transplant(BTreeNode* pNodeU, BTreeNode* pNodeV);
+	void BSTree_LeftRotate(BTreeNode* pNode);
+	void BSTree_RightRotate(BTreeNode* pNode);
+	void BSTree_LeftRightRotate(BTreeNode* pNode);
+	void BSTree_RightLeftRotate(BTreeNode* pNode);
 
 };
+
+/*
+ *红黑树是一棵满足如下性质的二叉搜索树：
+ *    1. 每一个节点是红色或者黑色
+ *    2. 根节点是黑色
+ *    3. 每个叶子节点是黑色的
+ *    4. 如果一个节点是红色的，那么它的两个子节点是黑色的
+ *    5. 对每个节点而言，从该节点到其所有后代叶子节点的简单路径上，包含相同的黑节点数目
+ */
 
 class RBTree: public BSTree
 {
@@ -215,7 +232,8 @@ public:
 	void RBTreeDelete(BTreeNode* pNodeZ);
 	void BSTree_Insert(BTreeNode* pNode);
 
-	static BTreeNode RBTreeNIL; //static成员在类里面声明,在类外定义
+	BTreeNode* RBTreeRightest();
+	BTreeNode* RBTreeLeftest();
 
 private:
 	void RBTree_Insert_Fixup(BTreeNode* pNode);
@@ -223,8 +241,28 @@ private:
 
 private:
 	BTreeNode *RBTreeNil;/*sentential哨兵*/
+	static BTreeNode RBTreeNIL; //static成员在类里面声明,在类外定义
 };
 
+
+/*
+ *AVL树：
+ *    左子树和右子树的高度最多相差1的二叉搜索树
+ */
+
+class AVLTree :public BSTree{
+public:
+	AVLTree();
+	~AVLTree();
+	explicit AVLTree(const vector<BTreeElemType>&elem_vec);
+
+	void AVLTreeInsert(BTreeNode* pNode);
+	void AVLTreeDelete(BTreeNode* pNode);
+	void AVLTreeDelete(BTreeElemType elem);
+
+private:
+	bool AVLTreeIsBalance(BTreeNode *pNode);
+};
 
 #endif
 
