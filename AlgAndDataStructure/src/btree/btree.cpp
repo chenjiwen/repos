@@ -20,7 +20,10 @@ BTree::BTree(const BTreeNode* pNode, BinaryTreeType type):root((BTreeNode*)pNode
 }
 
 BTree::~BTree() {
-    //release the tree
+	if (root != pBTreeNil) {
+		destroy_btree(root);
+	}
+	root = pBTreeNil;
 }
 
 void visit_node(const BTreeNode* pBtreeNode)
@@ -318,7 +321,7 @@ int BTree::btree_height(const BTreeNode* btree) {
 
 	if (pBTreeNil == btree)
 	{
-		return 0;
+		return -1;
 	}
 
 	return max(btree_height(btree->lchild), btree_height(btree->rchild)) + 1;
@@ -331,6 +334,26 @@ int BTree::btree_height() {
 void BTree::btree_build() {
 
 }
+
+void BTree::destroy_btree(BTreeNode* btree) {
+	if (btree != pBTreeNil)
+	{
+		if (btree->lchild)
+		{
+			destroy_btree(btree->lchild);
+			btree->lchild = pBTreeNil;
+		}
+
+		if (btree->rchild)
+		{
+			destroy_btree(btree->rchild);
+			btree->rchild = pBTreeNil;
+		}
+
+		delete btree;
+	}
+}
+
 
 void BTree::btree_traverse_level() {
 	vector<BTreeNode*> queue;
@@ -394,7 +417,7 @@ BTreeNode* ExprTree::build_expr_tree_postorder(const BTreeElemType elem_array[],
 }
 
 
-BSTree::BSTree()
+BSTree::BSTree(BinaryTreeType type):BTree(type)
 {
 
 }
@@ -634,11 +657,11 @@ void BSTree::BSTree_Transplant(BTreeNode* pNodeU, BTreeNode* pNodeV) {
 void BSTree::BSTree_Delete(BTreeNode* pNode, DeleteNodeType replaceBy) {
 	BTreeNode* pTempNodeY = pBTreeNil;
 
-	if (pBTreeNil != pNode->lchild)
+	if (pBTreeNil == pNode->lchild)
 	{
 		BSTree_Transplant(pNode, pNode->rchild);
 	}
-	else if (pBTreeNil != pNode->rchild)
+	else if (pBTreeNil == pNode->rchild)
 	{
 		BSTree_Transplant(pNode, pNode->lchild);
 	}
@@ -679,6 +702,105 @@ void BSTree::BSTree_Delete(BTreeNode* pNode, DeleteNodeType replaceBy) {
 			pTempNodeY->lchild->parent = pTempNodeY;
 		}
 
+	}
+}
+
+void BSTree::BSTree_LeftRotate(BTreeNode* pNode) {
+	BTreeNode* pTempNodeY = pBTreeNil;
+	BTreeNode* pRBTreeRoot = pBTreeNil;
+
+	pRBTreeRoot = get_root();
+	pTempNodeY = pNode->rchild;
+	if (pTempNodeY == pBTreeNil)
+	{
+		return;
+	}
+
+	pNode->rchild = pTempNodeY->lchild;
+
+	if (pTempNodeY->lchild != pBTreeNil)
+	{
+		pTempNodeY->lchild->parent = pNode;
+	}
+
+	pTempNodeY->parent = pNode->parent;
+
+	if (pNode->parent == pBTreeNil)
+	{
+		set_root(pTempNodeY);
+	}
+	else if (is_lchild_node(pNode))
+	{
+		pNode->parent->lchild = pTempNodeY;
+	}
+	else
+	{
+		pNode->parent->rchild = pTempNodeY;
+	}
+
+	pTempNodeY->lchild = pNode;
+	pNode->parent = pTempNodeY;
+}
+
+void BSTree::BSTree_RightRotate(BTreeNode* pNodeX) {
+	BTreeNode* pNodeY = pBTreeNil;
+	BTreeNode* pRBTreeRoot = pBTreeNil;
+
+	pRBTreeRoot = get_root();
+
+	//step1: 把NodeY的右孩子嫁接到NodeX的左孩子上
+	//获取左孩子
+	pNodeY = pNodeX->lchild;
+	if (pNodeY == pBTreeNil)
+	{
+		return;
+	}
+
+	//NodeX的左孩子修改为NodeY的右孩子
+	pNodeX->lchild = pNodeY->rchild;
+
+	//修改NodeY的右孩子的父节点，
+	if (pNodeY->rchild != pBTreeNil)
+	{
+		pNodeY->rchild->parent = pNodeX;
+	}
+
+	//修改NodeY的父节点为NodeX的父节点
+	pNodeY->parent = pNodeX->parent;
+
+	//修改NodeX的父节点的孩子节点为NodeY
+	if (pNodeX->parent == pBTreeNil)
+	{
+		set_root(pNodeY);
+	}
+	else if (is_lchild_node(pNodeX))
+	{
+		pNodeX->parent->lchild = pNodeY;
+	}
+	else
+	{
+		pNodeX->parent->rchild = pNodeY;
+	}
+
+	//修改NodeY的右孩子节点
+	pNodeY->rchild = pNodeX;
+	//修改NodeX的父节点
+	pNodeX->parent = pNodeY;
+}
+
+void BSTree::BSTree_LeftRightRotate(BTreeNode* pNode) {
+	if (pNode->parent && pNode->rchild)
+	{
+		BSTree_LeftRotate(pNode);
+		BSTree_RightRotate(pNode->parent->parent);
+	}
+}
+
+void BSTree::BSTree_RightLeftRotate(BTreeNode* pNode) {
+	if (pNode->parent && pNode->lchild)
+	{
+		BSTree_RightRotate(pNode);
+		BSTree_LeftRotate(pNode->parent->parent);
 	}
 }
 
@@ -869,7 +991,7 @@ void RBTree::RBTree_Insert_Fixup(BTreeNode* pNode) {
 		{
 			/*case1: parent is left child node*/
 
-			//get uncle 
+			//Y used to record uncle of current node
 			pTempY = pNode->parent->parent->rchild;
 
 			
@@ -887,11 +1009,22 @@ void RBTree::RBTree_Insert_Fixup(BTreeNode* pNode) {
 			}
 			else 
 			{
+				/*
+				 *uncle's color is black
+				 */
 				if (pNode == pNode->parent->rchild) 
 				{
+					/*
+					 *current node is right child, left rotate
+					 */
 					pNode = pNode->parent;
 					RBTreeLeftRotate(pNode);
 				}
+
+				/*
+				 *color parent with black
+				 *color sibling with red
+				 */
 				pNode->parent->color = RBTreeNode_Blk;
 				pNode->parent->parent->color = RBTreeNode_Red;
 				RBTreeRightRotate(pNode->parent->parent);
@@ -1012,7 +1145,7 @@ void RBTree::RBTreeDeleteFixUp(BTreeNode* pNodeX) {
 					pNodeW = pNodeX->parent->rchild;
 				}
 				//case4
-				//只需要基于x的父节点做一次右旋，同时修改w->
+				//只需要基于x的父节点做一次右旋，同时修改叔节点的颜色
 				pNodeW->color = pNodeX->parent->color;
 				pNodeX->parent->color = RBTreeNode_Blk;
 				pNodeX->rchild->color = RBTreeNode_Blk;
@@ -1114,4 +1247,154 @@ void RBTree::RBTreeDelete(BTreeNode* pNodeZ) {
 	{
 		RBTreeDeleteFixUp(pNodeX);
 	}
+}
+
+BTreeNode* RBTree::RBTreeRightest() {
+	return BSTree_Maximum();
+}
+
+BTreeNode* RBTree::RBTreeLeftest()
+{
+	return BSTree_Minimum();
+}
+
+
+AVLTree::AVLTree():BSTree(BTREE_AVL) {
+
+}
+
+AVLTree::~AVLTree() {
+
+}
+
+AVLTree::AVLTree(const vector<BTreeElemType>& elem_vec) {
+	for (vector<BTreeElemType>::size_type i = 0; i < elem_vec.size(); i++)
+	{
+		BTreeNode* pNode = new BTreeNode;
+		pNode->color = RBTreeNode_MAX;
+		pNode->elem = elem_vec[i];
+		pNode->parent = pBTreeNil;
+		pNode->rchild = pBTreeNil;
+		pNode->lchild = pBTreeNil;
+		AVLTreeInsert(pNode);
+	}
+}
+
+bool AVLTree::AVLTreeIsBalance(BTreeNode* pNode) {
+	int ltree_h = 0;
+	int rtree_h = 0;
+	int diff;
+
+	if (!pNode)
+	{
+		return true;
+	}
+	ltree_h = btree_height(pNode->lchild);
+	rtree_h = btree_height(pNode->rchild);
+
+	diff = max(ltree_h, rtree_h) - min(ltree_h, rtree_h);
+	if (diff >= 2)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+void AVLTree::AVLTreeInsert(BTreeNode* pNode) {
+	BTreeNode* pTempX = pBTreeNil;
+	BTreeNode* pTempY = pBTreeNil;
+	BTreeNode* ptemp = NULL;
+
+	if (pNode == pBTreeNil)
+	{
+		return;
+	}
+	BSTree_Insert(pNode);
+
+	//对于树高小于2的不需要调整
+	if (btree_height() < 2)
+	{
+		return;
+	}
+
+	pTempX = pNode->parent->parent;
+	pTempY = pNode->parent;
+	while (pTempX)
+	{
+		if (!AVLTreeIsBalance(pTempX))
+		{
+			if (btree_height(pTempX->lchild) > btree_height(pTempX->rchild))
+			{
+				if (is_lchild_node(pNode))
+				{
+					BSTree_RightRotate(pTempX);
+					pTempX = pTempY->parent;
+				}
+				else
+				{
+					BSTree_LeftRightRotate(pTempY);
+					pTempX = pNode->parent;
+					ptemp  = pTempY;
+					pTempY = pNode;
+					pNode  = pTempY;
+				}			
+			}
+			else
+			{
+				if (is_rchild_node(pNode))
+				{
+					BSTree_LeftRotate(pTempX);
+					pTempX = pTempY->parent;
+				}
+				else
+				{
+					BSTree_RightLeftRotate(pTempY);
+					pTempX = pNode->parent;
+					ptemp  = pTempY;
+					pTempY = pNode;
+					pNode  = ptemp;
+				}
+			}
+		}
+		else
+		{
+			pNode = pTempY;
+			pTempY = pTempX;
+			pTempX = pTempX->parent;
+		}
+
+	}
+}
+
+void AVLTree::AVLTreeDelete(BTreeNode* pNode) {
+	BTreeNode* pTempNodeY = pBTreeNil;
+	DeleteNodeType del_type;
+
+	int rh = 0, lh = 0;
+	lh = btree_height(pNode->lchild);
+	rh = btree_height(pNode->rchild);
+	if (lh > rh)
+	{
+		del_type = DELETED_NODE_BY_PRE;
+	}
+	else
+	{
+		del_type = DELETED_NODE_BY_SUCC;
+	}
+	BSTree_Delete(pNode, del_type);
+
+}
+
+void AVLTree::AVLTreeDelete(BTreeElemType key) {
+	BTreeNode* pNode = NULL;
+
+	pNode = BSTree_search(key);
+	if (!pNode)
+	{
+		return;
+	}
+
+	AVLTreeDelete(pNode);
+	delete pNode;
 }

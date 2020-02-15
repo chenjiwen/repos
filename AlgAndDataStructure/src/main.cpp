@@ -30,6 +30,18 @@ void heap_sort_test(int array[], int len) {
 	cout << "heap sort end" << endl;
 }
 
+void btree_test() {
+
+}
+
+void avltree_test() {
+	//BTreeElemType elem[] = {4, 2, 8, 1, 3, 7, 9, 5, 6};
+	BTreeElemType elem[] = { 3, 2, 1, 4, 5, 6, 7, 16, 15, 14, 13, 12, 11, 10, 9, 8};
+	vector<BTreeElemType> elem_vec(elem, elem + sizeof(elem)/sizeof(elem[0]));
+	AVLTree AVLtree(elem_vec);
+	//AVLtree.AVLTreeDelete(8);
+}
+
 int main(int argc, char **argv) {
 	uint32_t array_a[5] = {1, 2, 3, 4, 5};
 	uint32_t array_b[5] = {7, 8, 6, 10, 9};
@@ -72,6 +84,8 @@ int main(int argc, char **argv) {
 		rbtree.RBTreeDelete(pNode);
 		delete pNode;
 	}
+
+	avltree_test();
 
 	bheap.dump_heap();
 

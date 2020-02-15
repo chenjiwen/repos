@@ -56,10 +56,10 @@
       <data key="d5"/>
       <data key="d6">
         <y:ShapeNode>
-          <y:Geometry height="62.0" width="693.0" x="61.0" y="61.0"/>
+          <y:Geometry height="62.0" width="1141.75" x="-124.0" y="61.0"/>
           <y:Fill color="#FFFFFF" transparent="false"/>
           <y:BorderStyle color="#000000" raised="false" type="line" width="1.0"/>
-          <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="16" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="62.8046875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="693.0" x="0.0" xml:space="preserve" y="-0.40234375">插入一个节点到红黑树的时候，节点的初始颜色为红色，当插入到红黑树的时候主要会违反
+          <y:NodeLabel alignment="left" autoSizePolicy="node_width" fontFamily="Dialog" fontSize="16" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="62.8046875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="1141.75" x="0.0" xml:space="preserve" y="-0.40234375">插入一个节点到红黑树的时候，节点的初始颜色为红色，当插入到红黑树的时候主要会违反
 性质1或者性质4，对于性质1只需要设置根为黑色即可解决。对于性质4，可以查看当一个红色
 节点插入到红黑树的时候出现的情况进行考虑即可<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
           <y:Shape type="rectangle"/>
