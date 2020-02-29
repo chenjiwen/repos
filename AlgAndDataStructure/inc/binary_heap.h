@@ -65,7 +65,7 @@ public:
 	explicit BinaryHeap(int array[], int len, bool sort = true, bheap_mode mode = MAX_BINARY_HEAP);//默认实参、缺省参数构造函数，explicit抑制int到类类型的转换
     explicit BinaryHeap(const vector<int> &vec, bool sort = true, bheap_mode mode = MAX_BINARY_HEAP);//
     //BinaryHeap():vec_len(0), heap_size(0),sorted(false){}
-     BinaryHeap();
+    explicit BinaryHeap(bheap_mode mode = MAX_BINARY_HEAP);
 	~BinaryHeap();
 
 protected:
@@ -81,6 +81,7 @@ protected:
     //minheap API
     void min_heapify(vector<int>::size_type idx);
     void build_min_heap();
+    
 
     
 
@@ -98,13 +99,15 @@ public:
     void heap_increase_key(int node, int key);
     void heap_insert(int key);
     void heap_delete(vector<int>::size_type node);
+    void min_heap_insert(int key);
+    void min_heap_delete(vector<int>::size_type node);
     virtual int getHeapMax();
 
 private:
     vector<int>::size_type vec_len;        // vec_len = size of vec + 1(the first element is used to store the heap size)
     vector<int>::size_type heap_size;      // heap size
 	vector<int> vec;                       // vec[0] is used to store the heap size
-    bool sorted;                           // is heap sorted?
+    bool sorted;                           // Need sort the heap
     bheap_mode heap_mode;
 };
 

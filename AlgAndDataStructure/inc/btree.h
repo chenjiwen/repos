@@ -44,42 +44,42 @@ public:
 	/*
 	 *test if node is leaf node
 	 */
-	bool is_leaf_node(const BTreeNode* pNode);
+	bool is_leaf_node(const BTreeNode* pNode) const;
 
 	/*
 	 *test if  node is a right child node
 	 */
-	bool is_rchild_node(const BTreeNode* pNode);
+	bool is_rchild_node(const BTreeNode* pNode) const;
 
 	/*
 	 *test if  node is a left child node
 	 */
-	bool is_lchild_node(const BTreeNode* pNode);
+	bool is_lchild_node(const BTreeNode* pNode) const;
 
 	/*
 	 *test if the node is root node
 	 */
-	bool is_root_node(const BTreeNode* pNode);
+	bool is_root_node(const BTreeNode* pNode)const;
 
 	/*
 	 *test if the descendant node is the real descendant of the ancestor
 	 */
-	bool is_node_descendant(const BTreeNode* descendant, const BTreeNode* ancestor);
+	bool is_node_descendant(const BTreeNode* descendant, const BTreeNode* ancestor) const;
 
 	/*
 	 *test if the pNode is the rchild of parent node
 	 */
-	bool is_rchild(const BTreeNode* pNode, const BTreeNode* parent);
+	bool is_rchild(const BTreeNode* pNode, const BTreeNode* parent) const;
 
 	/*
 	 *test if the pNode is the left child of the parent node
 	 */
-	bool is_lchild(const BTreeNode* pNode, const BTreeNode* parent);
+	bool is_lchild(const BTreeNode* pNode, const BTreeNode* parent)const;
 
 	/*
 	 *test the parent node is the parent of pNode
 	 */
-	bool is_parent(const BTreeNode* pNode, const BTreeNode* parent);
+	bool is_parent(const BTreeNode* pNode, const BTreeNode* parent)const;
 
 	/*
 	 *traverse the tree in inorder
@@ -121,12 +121,22 @@ public:
 
 	void destroy_btree(BTreeNode* btree);
 
+	/*
+	 *对于重载 操作符delete/new是类成员
+	 *如果是对象的成员，试想一下成员都还没有如何去new或者成员还在的情况如何去delete自身
+	 */
+	void operator delete(void*);
+	static void set_btree_nil(BTreeNode* pNil);
+	static void btree_release(BTreeNode* pNil);
+
 protected:
 	void set_root(const BTreeNode* pRootNode);
 	void set_tree_type(BinaryTreeType type);
 	BinaryTreeType get_tree_type();
 
 	BTreeNode* pBTreeNil;
+
+	static BTreeNode* pBTreeNULL;
 
 private:
 	BTreeNode* root;
@@ -263,6 +273,97 @@ public:
 private:
 	bool AVLTreeIsBalance(BTreeNode *pNode);
 };
+
+
+
+/*
+ *最优二叉搜索树：
+ *
+ *d0<k1<d1<k2<d2<...<k(n)<d(n)
+ *k1, k2, ... k(n)的概率大于d0, d1, ... d(n)的概率
+ *最优二叉搜索树是一颗期望深度最小的二叉搜索树
+ *任意一棵二叉搜索树的子树：它必须包含连续的关键字ki, k(i+1),...kj，同时d(i-1), di, ...dj是叶子节点
+ *
+ */
+
+typedef enum {
+	NODE_KEY,
+	NODE_PSD
+}NodeType;
+
+class OptimalBSTree : public BSTree{
+public:
+	OptimalBSTree();
+	~OptimalBSTree();
+
+	void optimal_bst(vector<double> p, vector<double> q);
+
+private:
+	//double** expTable;
+	//int** root_table;
+	vector<double> key_p;
+	vector<double> pskey_p;
+	int keyNum;
+};
+
+/*
+ *B balance tree
+ */
+
+#define BBTREE_USE_STATIC_MEM
+
+typedef char BBElemType;
+
+#ifdef BBTREE_USE_STATIC_MEM
+typedef struct BBTreeNode {
+	static const int degree = 2;
+	bool leaf;
+	int  keyNum;
+	BBElemType key[(degree << 1) -1];
+	struct BBTreeNode* child[degree << 1];
+}BBTreeNode;
+#else
+typedef struct BBTreeNode {
+	bool leaf;
+	int  keyNum;
+	BBElemType *key;
+	struct BBTreeNode** child;
+}BBTreeNode;
+#endif
+
+class BBTree
+{
+public:
+	BBTree(int degree = 2);
+	~BBTree();
+	void BBTreeCreate();
+	BBTreeNode* BBTreeSearch(BBTreeNode *BBTree, BBElemType k, int &indx);
+	void BBTreeSplitChild(BBTreeNode *pNodeX, int i);
+	void BBTreeInsert(BBElemType key);
+	void BBTreeInsertNonFull(BBTreeNode* pBBTree, BBElemType key);
+	BBElemType BBTreeSmallest();
+	BBElemType BBTreeSmallest(BBTreeNode* pBBTree);
+	BBElemType BBTreeLargest(BBTreeNode* pBBTree);
+	BBElemType BBTreePrecedence(BBElemType key);
+	BBElemType BBTreeSucessor(BBTreeNode* pBBTree, BBElemType key);
+	BBElemType BBTreePrecedence(BBTreeNode* pBBTree,BBElemType key);
+	BBTreeNode* BBTreeParent(BBTreeNode* pBBTree,BBElemType key, int &idx);
+	BBTreeNode* BBTreeAllocNode();
+	void BBTreeInorderTraverse(BBTreeNode *pBBTree);
+	BBTreeNode* BBTreeRoot();
+	BBTreeNode* BBTreeMergeChild(BBTreeNode *pNodeX, int i);
+	void BBTreeParentDownPreUp(BBTreeNode* pNodeX, int i, BBTreeNode * pNodeY, BBTreeNode *pNodeZ);
+	void BBTreeParentDownSucUp(BBTreeNode* pNodeX, int i, BBTreeNode * pNodeY, BBTreeNode* pNodeZ);
+	void BBTreeAntiClockwiseRotate(BBTreeNode* pNodeX, int i);
+	void BBTreeDelete(BBTreeNode* pNodeX, BBElemType key);
+	void BBTreeDestroy(BBTreeNode *pBBTree);
+
+private:
+	BBTreeNode* root;
+	int degree;
+	bool dynamic_mem;
+};
+
 
 #endif
 
