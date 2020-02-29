@@ -60,7 +60,9 @@ BinaryHeap::BinaryHeap(const vector<int> &vect, bool sort, bheap_mode hp_mode):
 	cout << "BinaryHeap(const vector<int> &vect, bool sort)" << endl;
 }
 
-BinaryHeap::BinaryHeap():vec_len(0), heap_size(0), sorted(false), heap_mode(MAX_BINARY_HEAP) {
+BinaryHeap::BinaryHeap(bheap_mode mode):vec_len(0), heap_size(0), sorted(false), heap_mode(mode) {
+	vec_len = 1;
+	vec.push_back(0);
 	cout << "BinaryHeap()" << endl;
 }
 
@@ -232,7 +234,9 @@ void BinaryHeap::heap_delete(vector<int>::size_type node) {
 	}
 
 	swap(vec[node], vec[heap_size]);
+	vec.pop_back();
 	heap_size--;
+	vec_len--;
 	max_heapify(node);
 }
 
@@ -290,3 +294,38 @@ void BinaryHeap::min_heap_sort() {
 	}
 }
 
+void BinaryHeap::min_heap_insert(int key) {
+	vector<int>::size_type node = 0;
+	vec.push_back(key);
+	heap_size++;
+	vec_len++;
+
+	node = heap_size;
+	while (node > 1 && vec[parent(node)] > vec[node])
+	{
+		swap(vec[node], vec[parent(node)]);
+		node = parent(node);
+	}
+}
+
+void BinaryHeap::min_heap_delete(vector<int>::size_type node) {
+	if (sorted || !heap_size || node > heap_size)
+	{
+		return;
+	}
+
+	swap(vec[node], vec[heap_size]);
+	vec.pop_back();
+	heap_size--;
+	vec_len--;
+	min_heapify(node);
+}
+
+int BinaryHeap::getMinFromMinHeap() {
+	if (heap_size == 0)
+	{
+		return -1;
+	}
+
+	return vec[1];
+}

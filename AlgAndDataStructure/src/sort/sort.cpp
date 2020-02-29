@@ -1,7 +1,8 @@
 #include "sort.h"
 #include <string.h>
 #include "binary_heap.h"
-
+#include <iostream>
+using namespace std;
 /*
  *bubble sort
  *
@@ -202,7 +203,7 @@ static int quick_sort_tail_partion(int left_idx, int right_idx, uint32_t array[]
     pivot_element = array[right_idx];
 
     //j 用于迭代查找小于pivot element，当找到后array[i+1]<->array[j]
-    for (j = left_idx; j < right_idx - 1; j++)
+    for (j = left_idx; j <= right_idx - 1; j++)
     {
         //当前的元素小于pivot，交换到i + 1的位置
         if (array[j] <= pivot_element)
@@ -229,7 +230,7 @@ void quick_sort(int left, int right, uint32_t array[])
     if (left >= right)
         return;
 
-    idx = quick_sort_partition(left, right, array);
+    idx = quick_sort_tail_partion(left, right, array);
 
     quick_sort(left, idx - 1, array);
     quick_sort(idx + 1, right, array);
@@ -301,6 +302,166 @@ uint32_t select_kth(int k, int left, int right, uint32_t array[]) {
     return array[i];
 }
 
+int select_kth_with_heap(uint32_t k) {
+    BinaryHeap bheap(MIN_BINARY_HEAP);
+    int num = -1;
+
+    while (cin >> num)
+    {
+        if (bheap.getHeapSize() < k)
+        {
+            bheap.min_heap_insert(num);
+        }
+        else if (num > bheap.getMinFromMinHeap())
+        {
+            bheap.min_heap_delete(1);
+            bheap.min_heap_insert(num);
+        }
+    }
+
+    return bheap.getMinFromMinHeap();
+}
+
+int a[100][100] = { 0 };
+int idx[100];
+
+bool isPossibleDivide(int nums[], int len, int k) {
+	//先排序，然后填一个二维数组    
+	int i = 0, j = 0, m = 0, n = 0;
+	int prev = 0, diff = 0;
+	const int col = k;
+	const int row = len / k;
+	
+    bool duplicated = false;
+
+
+	if (len % k != 0) {
+		return false;
+	}
+
+	quick_sort(0, len - 1, (uint32_t*)nums);
+
+    //fill the table in column
+    //i_row用于记录row
+    //j_col用于记录col
+    //当遇到一个相同的元素的时候，放到下一列
+    int cur_row = 0;
+    int cur_col = 0;
+    int i_row = 0;
+
+    for (m = 0; m < len; m++)
+    {
+        if (m == 0)
+        {
+            prev = nums[m];
+            a[cur_row][cur_col] = nums[m];
+            cur_col++;
+            idx[cur_row] = cur_col;
+            continue;
+        }
+        else if (prev == nums[m])
+        {
+            //把当前的列位置记录在row idx数组中
+            idx[cur_row] = cur_col;
+            i_row = cur_row;
+            cur_row = 0;
+            while (1)
+            {
+                if (idx[cur_row] != col)
+                {
+                    if (i_row == cur_row)
+                    {
+						cur_row++;
+						cur_row %= row;
+                        continue;
+                    }
+                    else if (idx[cur_row] && (a[cur_row][idx[cur_row] - 1] == nums[m]))
+                    {
+						cur_row++;
+						cur_row %= row;
+                        continue;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+      
+				cur_row++;
+				cur_row %= row;
+            }
+            //找到了行，把列从idx表里取出来
+            cur_col = idx[cur_row];
+            a[cur_row][cur_col] = nums[m];
+            cur_col++;
+            idx[cur_row] = cur_col;
+        }
+        else
+        {
+            cur_col = idx[cur_row];
+			//如果当前的行已经满，找下一个合适的行
+			if (cur_col == col)
+			{
+                i_row = cur_row;
+				cur_row = 0;
+				while (1)
+				{
+					if (idx[cur_row] != col)
+					{
+						if (i_row == cur_row)
+						{
+							cur_row++;
+							cur_row %= row;
+							continue;
+						}
+						else if (a[cur_row][idx[cur_row] - 1] == nums[m])
+						{
+							cur_row++;
+							cur_row %= row;
+							continue;
+						}
+						else
+						{
+							break;
+						}
+					}
+
+					cur_row++;
+					cur_row %= row;
+				}
+                cur_col = idx[cur_row];
+			}
+
+            a[cur_row][cur_col] = nums[m];
+            prev = nums[m];
+            cur_col++;
+            idx[cur_row] = cur_col;
+
+        }
+    }
+
+    for (i = 0; i < row; i++)
+    {
+        prev = 0;
+        for (j = 0; j < col; j++)
+        {
+            if (j == 0)
+            {
+                prev = a[i][j];
+                continue;
+            }
+
+            if (a[i][j] != prev + 1)
+            {
+                return false;
+            }
+
+            prev = a[i][j];
+        }
+    }
+
+	return true;
+}
 
 //
 //
@@ -354,4 +515,175 @@ vector<int> getMid(vector<int> vec1, vector<int> vec2) {
     return vec;
 
 
+}
+
+int quick_sort_partion(vector<int>& nums, vector<int>::size_type begin, vector<int>::size_type end) {
+	int i = begin - 1, j = 0;
+	int pivot = nums[end];//最后一个元素作为主元
+
+	for (j = begin; j <= end - 1; j++) {
+		if (nums[j] < pivot) {
+			swap(nums[++i], nums[j]);
+		}
+	}
+
+	swap(nums[++i], nums[end]);
+
+	return i;
+}
+
+void quick_sort(vector<int>& nums, vector<int>::size_type begin, vector<int>::size_type end) {
+	vector<int>::size_type idx = 0;
+	if (begin >= end) {
+		return;
+	}
+
+	idx = quick_sort_partion(nums, begin, end);
+
+	quick_sort(nums, begin, idx - 1);
+	quick_sort(nums, idx + 1, end);
+}
+/*
+ *把一个数组先排序，然后分成大小相同的子数组，子数组长度相同为K
+ *子数组按升序排列
+ *
+ *[1,2,2,3,3,4,4,5]->
+ *
+ *[1,2,3,4]
+ *[2,3,4,5]
+ */
+bool isPossibleDivide(vector<int>& nums, int k) {
+	//先排序，然后填一个二维数组    
+	int i = 0, j = 0, m = 0;
+	int prev = 0, diff = 0;
+	const int col = k;
+	const int row = nums.size() / k;
+	int cur_row = 0;
+	int cur_col = 0;
+	int len = nums.size();
+
+	if (nums.size() % k != 0) {
+		return false;
+	}
+
+	quick_sort(nums, 0, nums.size() - 1);
+
+
+	int i_row = 0;
+
+	for (m = 0; m < len; m++)
+	{
+		if (m == 0)
+		{
+			prev = nums[m];
+			a[cur_row][cur_col] = nums[m];
+			cur_col++;
+			idx[cur_row] = cur_col;
+			continue;
+		}
+		else if (prev == nums[m])
+		{
+			//把当前的列位置记录在row idx数组中
+			idx[cur_row] = cur_col;
+			i_row = cur_row;
+			cur_row = 0;
+			while (1)
+			{
+				if (idx[cur_row] != col)
+				{
+                    //行没有满的情况
+					if (i_row == cur_row)
+					{
+                        //需要排除当前行
+						cur_row++;
+						cur_row %= row;
+						continue;
+					}
+					else if (idx[cur_row] && (a[cur_row][idx[cur_row] - 1] == nums[m]))
+					{
+                        //如果改行的最后一个元素与当前元素相同也需要排除
+						cur_row++;
+						cur_row %= row;
+						continue;
+					}
+					else
+					{
+						break;
+					}
+				}
+
+				cur_row++;
+				cur_row %= row;
+			}
+			//找到了行，把列从idx表里取出来
+			cur_col = idx[cur_row];
+			a[cur_row][cur_col] = nums[m];
+			cur_col++;
+			idx[cur_row] = cur_col;
+		}
+		else
+		{
+			cur_col = idx[cur_row];
+			//如果当前的行已经满，找下一个合适的行
+			if (cur_col == col)
+			{
+				i_row = cur_row;
+				cur_row = 0;
+				while (1)
+				{
+					if (idx[cur_row] != col)
+					{
+						if (i_row == cur_row)
+						{
+							cur_row++;
+							cur_row %= row;
+							continue;
+						}
+						else if (idx[cur_row] && (a[cur_row][idx[cur_row] - 1] == nums[m]))
+						{
+							cur_row++;
+							cur_row %= row;
+							continue;
+						}
+						else
+						{
+							break;
+						}
+					}
+
+					cur_row++;
+					cur_row %= row;
+				}
+				cur_col = idx[cur_row];
+			}
+
+			a[cur_row][cur_col] = nums[m];
+			prev = nums[m];
+			cur_col++;
+			idx[cur_row] = cur_col;
+
+		}
+	}
+
+	for (i = 0; i < row; i++)
+	{
+		prev = 0;
+		for (j = 0; j < col; j++)
+		{
+			if (j == 0)
+			{
+				prev = a[i][j];
+				continue;
+			}
+
+			if (a[i][j] != prev + 1)
+			{
+				return false;
+			}
+
+			prev = a[i][j];
+		}
+	}
+
+	return true;
 }
