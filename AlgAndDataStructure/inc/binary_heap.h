@@ -4,6 +4,7 @@
 
 using namespace std;
 #include <vector>
+#include "stack.h"
 
 
 /******************************************************************************************************
@@ -122,6 +123,99 @@ inline vector<int>::size_type BinaryHeap::left_child(vector<int>::size_type node
 inline vector<int>::size_type BinaryHeap::right_child(vector<int>::size_type node_id) {
     return (node_id << 1) + 1;
 }
+
+
+class MergeableHeap
+{
+
+};
+
+typedef int FibHeapElement;
+
+typedef struct FibHeapNode 
+{
+    FibHeapElement key;
+    struct FibHeapNode* parent;
+    struct FibHeapNode* child;
+    dlist_t list;
+    int degree;//child num in list
+    bool marked;
+    void* priv;
+}FibHeapNode;
+
+class FibHeap
+{
+public:
+    FibHeap();
+    ~FibHeap();
+    void FibHeapInsert(FibHeapNode *pNode);
+    void FibHeapInsert(FibHeapElement key, void *);
+    FibHeap* FibHeapUnion(FibHeap* , FibHeap*);
+    int FibHeapMaxDegNum();
+    void FibHeapLink(FibHeapNode *pNodeY, FibHeapNode * pNodeX);
+    void FibHeapConsolidate();
+    FibHeapNode* FibHeapExtractMin();
+    void FibHeapCut(FibHeapNode* pNodeX, FibHeapNode* pNodeY);
+    void FibHeapCascadingCut(FibHeapNode* pNodeX);
+    void FibHeapDecreseKey(FibHeapNode* pNodeX, FibHeapElement k);
+    void FibHeapDelete(FibHeapNode *pNode);
+    void FibHeapDestroyMinHeap(FibHeapNode*);
+    void FibHeapDestroy();
+
+private:
+    FibHeapNode* minNode;
+    dlist_t  rootlist;
+    int NodeNum;
+};
+
+
+typedef int BNTreeElemType;
+
+typedef struct BNTreeNode
+{
+    BNTreeElemType           key;
+    struct BNTreeNode*       child;    //child
+    struct BNTreeNode*       parent;   //parent
+    int                      degree;   //child number
+    dlist_t                  list;     //list linked to the heap rootlist
+    struct BNTreeNode*       sib;      //sibling list
+}BNTreeNode;
+
+class BNTree {
+
+public:
+    BNTree(int num = 0);
+    ~BNTree();
+    BNTreeNode* BNTreeBuild(int k);
+    void BNTTreeUion(BNTreeNode*, BNTreeNode*);
+
+private:
+    BNTreeNode* root;
+    int nodeNum;
+    int depth;
+    dlist_t list;
+};
+
+class BNHeap
+{
+public:
+    BNHeap();
+    ~BNHeap();
+
+    void BNHeapInsert(BNTreeElemType key);
+    void BNHeapUion(BNTreeNode*, BNTreeNode*);
+    void BNHeapScanRootlistAndUnion();
+    void BNHeapScanRootlistAndUnion(BNTreeNode *from, bool scan);
+    void BNHeapInsertToRList(BNTreeNode*, bool need_scan = true);
+    BNTreeNode* BNHeapExtractMin();
+    void BNHeapDecreaseKey(BNTreeNode*, BNTreeElemType key);
+    void BNHeapDecreaseKey(BNTreeNode* pNode, BNTreeElemType key, bool need_cut);
+    BNTreeNode* BNHeapSearch(BNTreeNode* ,BNTreeElemType key);
+
+private:
+    BNTreeNode* minNode;
+    dlist_t rootlist;
+};
 
 #endif
 

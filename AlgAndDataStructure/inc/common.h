@@ -13,5 +13,7 @@ using namespace std;
 typedef unsigned long uint32;
 typedef unsigned long ElemType;
 
+#define container_of(ptr, type, member) (type*)(((size_t)ptr - offsetof(type, member)))
+
 #endif
 

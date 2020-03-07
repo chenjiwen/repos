@@ -329,3 +329,628 @@ int BinaryHeap::getMinFromMinHeap() {
 
 	return vec[1];
 }
+
+FibHeap::FibHeap():minNode(NULL), NodeNum(0) {
+}
+
+FibHeap::~FibHeap() {
+	FibHeapDestroy();
+}
+
+void FibHeap::FibHeapInsert(FibHeapNode* pNode) {
+	pNode->degree = 0;
+	pNode->child = NULL;
+	pNode->marked = false;
+
+	if (!minNode)
+	{
+		minNode = pNode;
+		dlist_add(&rootlist, &pNode->list);
+	}
+	else
+	{
+		dlist_add_before(&minNode->list, &pNode->list);
+		if (pNode->key < minNode->key)
+		{
+			minNode = pNode;
+		}
+	}
+
+	NodeNum += 1;
+}
+
+void FibHeap::FibHeapInsert(FibHeapElement key, void *priv)
+{
+	FibHeapNode* pNode = NULL;
+
+	pNode = new FibHeapNode;
+	pNode->key = key;
+	pNode->priv = priv;
+	FibHeapInsert(pNode);
+}
+
+FibHeap* FibHeap::FibHeapUnion(FibHeap* pFH1, FibHeap* pFH2) 
+{
+	FibHeap* pFH = NULL;
+	dlist_t* plist = NULL;
+
+	pFH = new FibHeap();
+	pFH->minNode = pFH1->minNode;
+	pFH->NodeNum = pFH1->NodeNum;
+
+	if (!dlist_empty(&pFH1->rootlist))
+	{
+		plist = pFH1->rootlist.next;
+		//need delete the list head before concatenate
+		dlist_del(&pFH1->rootlist);
+		dlist_concate(&pFH->rootlist, plist);
+	}
+
+	if (!dlist_empty(&pFH2->rootlist))
+	{
+		plist = pFH2->rootlist.next;
+		//need delete the list head before concatenate
+		dlist_del(&pFH2->rootlist);
+		dlist_concate(&pFH->rootlist, plist);
+	}
+
+	if (!pFH->minNode || (pFH1->minNode->key < pFH2->minNode->key))
+	{
+		pFH->minNode = pFH2->minNode;
+	}
+
+	pFH->NodeNum += pFH2->NodeNum;
+
+	pFH1->minNode = NULL;
+	pFH2->minNode = NULL;
+
+	delete pFH1;
+	delete pFH2;
+
+	return pFH;
+}
+
+bool is2Exp(int n) {
+	return n ^ (n - 1);
+}
+
+int log(int n) {
+	int count = 0;
+	while (n)
+	{
+		count++;
+		n = n >> 1;
+	}
+
+	return count;
+}
+
+int FibHeap::FibHeapMaxDegNum()
+{
+	int n = NodeNum;
+	int count = 0;
+
+	if (!is2Exp(n))
+	{
+		count = 1;
+	}
+
+	while (n)
+	{
+		count++;
+		n = n >> 1;
+	}
+
+	return count;
+}
+
+
+void FibHeap::FibHeapLink(FibHeapNode* pNodeY, FibHeapNode* pNodeX)
+{
+	dlist_del(&pNodeY->list);
+	dlist_add(&pNodeX->child->list, &pNodeY->list);
+	pNodeX->degree++;
+	pNodeY->parent = pNodeX;
+	pNodeY->marked = false;
+}
+
+void FibHeap::FibHeapConsolidate()
+{
+	int num = FibHeapMaxDegNum() + 1;
+	FibHeapNode** table = new FibHeapNode*[num];
+	int i = 0;
+	FibHeapNode* pNodeW = NULL, * pNodeY = NULL, *pNodeX = NULL;
+	dlist_t* plist = NULL;
+	int d;
+
+	for (i = 0; i < num; i++)
+	{
+		table[i] = NULL;
+	}
+
+	plist = rootlist.next;
+	do
+	{
+		pNodeW = container_of(plist, FibHeapNode, list);
+		pNodeX = pNodeW;
+		d = pNodeX->degree;
+		while (table[d])
+		{
+			pNodeY = table[d];
+			if (pNodeX->key > pNodeY->key)
+			{
+				swap(pNodeX, pNodeY);
+			}
+			FibHeapLink(pNodeY, pNodeX);
+			table[d] = NULL;
+			d = (d + 1)%num;
+		}
+		table[d] = pNodeX;
+		plist = plist->next;
+	} while (plist != &rootlist);
+
+	minNode = NULL;
+	for (i = 0; i < num; i++)
+	{
+		if (table[i])
+		{
+			if (!minNode)
+			{
+				minNode = table[i];
+			}
+			else
+			{
+				dlist_add_before(&minNode->list, &table[i]->list);
+			}
+		}
+	}
+
+	delete[]table;
+}
+
+FibHeapNode* FibHeap::FibHeapExtractMin() 
+{
+	FibHeapNode* pNodeZ = NULL, *pNodeX = NULL;
+	dlist_t* plist = NULL;
+
+	pNodeZ = minNode;
+	if (pNodeZ)
+	{
+		
+		do
+		{
+			plist = pNodeZ->child->list.next;
+			pNodeX = container_of(plist, FibHeapNode, list);
+			pNodeX->parent = NULL;
+			dlist_del(plist);
+			dlist_add_before(&minNode->list, plist);
+		} while (!dlist_empty(&pNodeZ->child->list));
+
+		if (dlist_empty(&pNodeZ->list))
+		{
+			minNode = NULL;
+		}
+		else
+		{
+			pNodeX = container_of(pNodeZ->list.next, FibHeapNode, list);
+			dlist_del(&pNodeZ->list);
+			minNode = pNodeX;
+			FibHeapConsolidate();
+		}
+
+		NodeNum--;
+	}
+
+	return pNodeZ;
+}
+
+void FibHeap::FibHeapCut(FibHeapNode* pNodeX, FibHeapNode* pNodeY)
+{
+	dlist_del(&pNodeX->list);
+	dlist_add_before(&minNode->list, &pNodeX->list);
+	pNodeX->parent = NULL;
+	pNodeX->marked = false;
+}
+
+void FibHeap::FibHeapCascadingCut(FibHeapNode* pNodeY)
+{
+	FibHeapNode* pNodeZ = pNodeY->parent;
+
+	if (pNodeZ)
+	{
+		if (pNodeY->marked)
+		{
+			pNodeY->marked = false;
+		}
+		else
+		{
+			FibHeapCut(pNodeY, pNodeZ);
+			FibHeapCascadingCut(pNodeZ);
+		}
+	}
+}
+
+void FibHeap::FibHeapDecreseKey(FibHeapNode* pNodeX, FibHeapElement newKey)
+{
+	FibHeapNode* pNodeY = NULL;
+
+	if (pNodeX->key >= newKey)
+	{
+		pNodeX->key = newKey;
+		pNodeY = pNodeX->parent;
+
+		if (pNodeY && pNodeX->key < pNodeY->key)
+		{
+			FibHeapCut(pNodeX, pNodeY);
+			FibHeapCascadingCut(pNodeY);
+		}
+
+		if (pNodeX->key < minNode->key)
+		{
+			minNode = pNodeX;
+		}
+	}
+}
+
+void FibHeap::FibHeapDelete(FibHeapNode* pNode)
+{
+	FibHeapDecreseKey(pNode, INT_MIN);
+	FibHeapExtractMin();
+}
+
+void FibHeap::FibHeapDestroyMinHeap(FibHeapNode* pMinHeap)
+{
+	dlist_t *plist = NULL;
+	FibHeapNode* pNode = NULL;
+
+	while (!dlist_empty(&pMinHeap->child->list))
+	{
+		plist = pMinHeap->child->list.next;
+		pNode = container_of(plist, FibHeapNode, list);
+		FibHeapDestroyMinHeap(pNode);
+		dlist_del(plist);
+	}
+	dlist_del(&pMinHeap->list);
+	delete pMinHeap;
+}
+
+void FibHeap::FibHeapDestroy() 
+{
+	pdlist_t plist = NULL;
+	FibHeapNode* pNode = NULL;
+
+	do 
+	{
+		plist = rootlist.next;
+		pNode = container_of(plist, FibHeapNode, list);
+		FibHeapDestroyMinHeap(pNode);
+		dlist_del(plist);
+	} while (dlist_empty(&rootlist));
+}
+
+void FibHeapTest()
+{
+
+}
+
+
+BNTree::BNTree(int num):nodeNum(num), root(NULL), depth(-1) {
+	if (is2Exp(nodeNum))
+	{
+		depth = log(nodeNum);
+	}
+	else
+	{
+
+	}
+}
+
+BNTreeNode* BNTree::BNTreeBuild(int k) 
+{
+	BNTreeNode* pNode = NULL, *pBNTNode = NULL;
+	if (k == 0)
+	{
+		pBNTNode = new BNTreeNode;
+		pBNTNode->child = NULL;
+		pBNTNode->parent = NULL;
+		pBNTNode->sib = NULL;
+		pBNTNode->degree = 0;
+		pBNTNode->key = 0;
+	}
+	else
+	{
+		BNTreeNode* pTemp = NULL, *pchild = NULL;
+		int i = 0;
+		pBNTNode = new BNTreeNode;
+		pBNTNode->parent = NULL;
+		pBNTNode->key = k;
+		pBNTNode->sib = NULL;
+
+		for (i = k - 1; i >= 0; i--)
+		{
+			pNode = BNTreeBuild(i);
+			pNode->key = i;
+			pNode->parent = pBNTNode;
+			if (pTemp)
+			{
+				pTemp->sib = pNode;
+				pTemp = pNode;
+			}
+			else
+			{
+				pchild = pNode;
+				pTemp  = pNode;
+			}
+			
+		}
+		pBNTNode->child = pchild;
+		pBNTNode->degree = k;
+	}
+	root = pBNTNode;
+	return pBNTNode;
+}
+
+void BNTree::BNTTreeUion(BNTreeNode* pRBNTree, BNTreeNode* pLBNTree)
+{
+	pRBNTree->parent = pLBNTree;
+	pRBNTree->sib = pLBNTree->child;
+	pLBNTree->child = pRBNTree;
+}
+
+void BNTreeTest()
+{
+	BNTree bntree;
+
+	bntree.BNTreeBuild(3);
+}
+
+BNTree::~BNTree() {
+
+}
+
+BNHeap::BNHeap():minNode(NULL) {
+
+}
+
+BNHeap::~BNHeap() {
+
+}
+
+void BNHeap::BNHeapInsert(BNTreeElemType key) 
+{
+	BNTreeNode* pNode = NULL;
+	BNTreeNode* ptemp = NULL;
+	dlist_t *plist = NULL;
+
+	pNode = new BNTreeNode;
+	pNode->key = key;
+	pNode->parent = NULL;
+	pNode->sib = NULL;
+	pNode->child = NULL;
+	pNode->degree = 0;
+
+	if (!dlist_empty(&rootlist))
+	{
+		plist = rootlist.prev;
+		ptemp = container_of(plist, BNTreeNode, list);
+		dlist_add(rootlist.prev, &pNode->list);
+		BNHeapScanRootlistAndUnion();
+	}
+	else
+	{
+		minNode = pNode;
+		dlist_add(&rootlist, &pNode->list);
+	}
+}
+
+void BNHeap::BNHeapUion(BNTreeNode* pLBNPHeap, BNTreeNode* pRBNPHeap)
+{
+	if (pLBNPHeap->degree != pRBNPHeap->degree)
+	{
+		return;
+	}
+	pRBNPHeap->parent = pLBNPHeap;
+	pRBNPHeap->sib = pLBNPHeap->child;
+	pLBNPHeap->child = pRBNPHeap;
+	pLBNPHeap->degree += 1;
+}
+
+void BNHeap::BNHeapScanRootlistAndUnion()
+{
+#if 0
+	dlist_t* plist = NULL;
+	BNTreeNode* prevNode = NULL, * curNode = NULL;
+
+	plist = rootlist.prev;
+	while (plist != &rootlist)
+	{
+		curNode = container_of(plist, BNTreeNode, list);
+		if (plist->prev == &rootlist)
+		{
+			if (minNode->key < curNode->key)
+			{
+				minNode = curNode;
+			}
+			break;
+		}
+		prevNode = container_of(plist->prev, BNTreeNode, list);
+
+		if ((prevNode != curNode) && (curNode->degree == prevNode->degree))
+		{
+			if (curNode->key > prevNode->key)
+			{
+				plist = plist->prev;
+				dlist_del(&curNode->list);
+				BNHeapUion(prevNode, curNode);
+				minNode = prevNode;
+			}
+			else
+			{
+				dlist_del(&prevNode->list);
+				BNHeapUion(curNode, prevNode);
+				plist = plist->prev;
+				minNode = curNode;
+			}
+		}
+		else
+		{
+			plist = plist->prev;
+		}
+	}
+#else
+	if (dlist_empty(&rootlist))
+	{
+		return;
+	}
+	BNHeapScanRootlistAndUnion(container_of(rootlist.prev, BNTreeNode, list), true);
+#endif
+}
+
+void BNHeap::BNHeapScanRootlistAndUnion(BNTreeNode* from, bool need_scan)
+{
+	dlist_t* plist = NULL;
+	BNTreeNode* prevNode = NULL, * curNode = NULL;
+
+	if (!need_scan)
+	{
+		return;
+	}
+	plist = &from->list;
+	while (plist != &rootlist)
+	{
+		curNode = container_of(plist, BNTreeNode, list);
+		if (plist->prev == &rootlist)
+		{
+			if (minNode->key < curNode->key)
+			{
+				minNode = curNode;
+			}
+			break;
+		}
+		prevNode = container_of(plist->prev, BNTreeNode, list);
+
+		if ((prevNode != curNode) && (curNode->degree == prevNode->degree))
+		{
+			if (curNode->key > prevNode->key)
+			{
+				plist = plist->prev;
+				dlist_del(&curNode->list);
+				BNHeapUion(prevNode, curNode);
+				minNode = prevNode;
+			}
+			else
+			{
+				dlist_del(&prevNode->list);
+				BNHeapUion(curNode, prevNode);
+				plist = plist->prev;
+				minNode = curNode;
+			}
+		}
+		else
+		{
+			plist = plist->prev;
+		}
+	}
+}
+
+void BNHeap::BNHeapInsertToRList(BNTreeNode* pBNHeap, bool need_scan) 
+{
+	dlist_t* plist = NULL;
+	BNTreeNode* pNode = NULL;
+
+	if (dlist_empty(&rootlist))
+	{
+		dlist_add(rootlist.prev, &pBNHeap->list);
+	}
+	else
+	{
+		plist = rootlist.next;
+		while (plist != &rootlist)
+		{
+			pNode = container_of(plist, BNTreeNode, list);
+			if (pNode->degree > pBNHeap->degree)
+			{
+				plist = plist->next;
+			}
+			else 
+			{
+				dlist_add_before(&pNode->list ,&pBNHeap->list);
+				if (pNode->degree == pBNHeap->degree)
+				{
+					BNHeapScanRootlistAndUnion(pNode, need_scan);
+				}
+				break;
+			}
+		}
+	}
+}
+
+BNTreeNode* BNHeap::BNHeapExtractMin()
+{
+	BNTreeNode* child = NULL;
+
+	child = minNode->child;
+	while (child)
+	{
+		child->parent = NULL;
+		BNHeapInsertToRList(child,false);
+		child = child->sib;
+	}
+	BNHeapScanRootlistAndUnion();
+	return minNode;
+}
+
+BNTreeNode* BNHeap::BNHeapSearch(BNTreeNode* pBNHeap, BNTreeElemType key)
+{
+	BNTreeNode* pNode = NULL, *child = NULL;
+	if (!pBNHeap || pBNHeap->key == key)
+	{
+		return pBNHeap;
+	}
+
+	child = pBNHeap->child;
+	while (child)
+	{
+		pNode = BNHeapSearch(child, key);
+		if (pNode)
+		{
+			return pNode;
+		}
+		else
+		{
+			child = child->sib;
+		}
+	}
+
+	return NULL;
+}
+
+void BNHeap::BNHeapDecreaseKey(BNTreeNode* pNode, BNTreeElemType key)
+{
+	if (key < pNode->key)
+	{
+		pNode->key = key;
+		while (pNode->parent && pNode->key < pNode->parent->key)
+		{
+			swap(pNode->key, pNode->parent->key);
+			pNode = pNode->parent;
+		}
+	}
+}
+
+void BNHeap::BNHeapDecreaseKey(BNTreeNode* pNode, BNTreeElemType key, bool need_cut)
+{
+
+}
+
+void BNHeapTest()
+{
+	BNHeap bnheap;
+	int i = 0;
+
+	for (i = 0; i <= 3; i++)
+	{
+		bnheap.BNHeapInsert(i);
+	}
+}
+

@@ -1,5 +1,7 @@
 #include "stack.h"
 #include <string.h>
+#include <iostream>
+using namespace std;
 
 stack::~stack() {
 	if (!base)
@@ -9,7 +11,7 @@ stack::~stack() {
 }
 
 stack::stack(int size):top(0),stack_size(size),base(NULL) {
-	if (!size)
+	if (size)
 	{
 		base = new StackElemType[size];
 		if (!base)
@@ -18,6 +20,7 @@ stack::stack(int size):top(0),stack_size(size),base(NULL) {
 			return;
 		}
 		memset(base, 0, size * (sizeof(StackElemType)));
+		top = 0;
 	}
 }
 
@@ -40,7 +43,7 @@ void stack::push(StackElemType elem) {
  *调用者保证pop之前栈非空
  */
 StackElemType stack::pop() {
-	return base[top--];
+	return base[--top];
 }
 
 /*
@@ -408,4 +411,105 @@ LinkList_T* reverseKGroup(LinkList_T* head, int k) {
 	}
 
 	return head;
+}
+
+void llist_add(llist_t* prev, llist_t* pnode) {
+	pnode->next = prev->next;
+	prev->next = pnode;
+}
+
+void llist_del()
+{
+
+}
+
+void dlist_add(dlist_t* prev, dlist_t* pnode)
+{
+	pnode->next = prev->next;
+	prev->next->prev = pnode;
+
+	pnode->prev = prev;
+	prev->next = pnode;
+}
+
+void dlist_add_before(dlist_t* cur, dlist_t* pnode)
+{
+	cur->prev->next = pnode;
+	pnode->prev = cur->prev;
+
+	cur->prev = pnode;
+	pnode->next = cur;
+}
+
+void dlist_del(dlist_t* pnode)
+{
+	if (pnode)
+	{
+		pnode->prev->next = pnode->next;
+		pnode->next->prev = pnode->prev;
+		pnode->next = pnode->prev = pnode;
+	}
+}
+
+bool dlist_empty(dlist_t* pDlist)
+{
+	return pDlist->next == pDlist;
+}
+
+void dlist_concate(dlist_t *pDlist1, dlist_t *pDlist2)
+{
+	dlist_t* ptemp = NULL;
+	pDlist1->prev->next = pDlist2;
+	pDlist2->prev->next = pDlist1;
+
+	ptemp = pDlist1->prev;
+	pDlist1->prev = pDlist2->prev;
+	pDlist2->prev = ptemp;
+}
+
+typedef struct  
+{
+	int key;
+	dlist_t list;
+}DListT;
+
+void dlist_test()
+{
+	DListT* plist = NULL;
+	DListT DList1, DList2;
+	dlist* ptmp = NULL;
+
+	DList1.key = -1;
+
+
+	int i = 0;
+
+	for (i = 1; i < 3; i++)
+	{
+		plist = new DListT;
+		plist->key = i;
+		dlist_add(&DList1.list, &plist->list);
+	}
+
+	for (i = 3; i < 5; i++)
+	{
+		plist = new DListT;
+		plist->key = i;
+		dlist_add(&DList2.list, &plist->list);
+	}
+
+	ptmp = DList2.list.next;
+	dlist_del(&DList2.list);
+
+	dlist_concate(&DList1.list, ptmp);
+
+	
+	do 
+	{
+		ptmp = DList1.list.next;
+		plist = container_of(ptmp, DListT, list);
+		cout << plist->key << endl;
+		dlist_del(ptmp);
+		delete plist;
+	} while (!dlist_empty(&DList1.list));
 }

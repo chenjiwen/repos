@@ -102,6 +102,12 @@ extern void bst_test();
 extern void optBst_test();
 extern void knapsack_test();
 extern void BBTreeTest();
+extern void BPTree_test();
+extern void dlist_test();
+extern void BNTreeTest();
+extern void BNHeapTest();
+extern void graphic_test();
+extern void graph_test();
 
 int main(int argc, char **argv) {
 	uint32_t array_a[5] = {1, 2, 3, 4, 5};
@@ -168,9 +174,14 @@ int main(int argc, char **argv) {
 	//knapsack_test();
 
 	//optBst_test();
+	//BNTreeTest();
+	//BNHeapTest();
+	//dlist_test();
+	//BBTreeTest();
+	//BPTree_test();
 
-	BBTreeTest();
-
+	//graphic_test();
+	graph_test();
 	bheap.dump_heap();
 
 	elem = select_kth(2, 0, 9, array);

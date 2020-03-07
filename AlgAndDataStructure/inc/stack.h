@@ -35,7 +35,23 @@ typedef struct DLinkList
 
 typedef int LinkListEmemType;
 
+typedef struct llist 
+{
+	struct llist* next;
+	llist():next(NULL){}
+}llist_t;
 
+typedef struct dlist {
+	struct dlist* prev;
+	struct dlist* next;
+	dlist()
+	{
+		prev = this;
+		next = this;
+	}
+}dlist_t, *pdlist_t;
+
+typedef llist_t* pllist_t;
 
 typedef struct LinkList
 {
@@ -69,5 +85,12 @@ LinkList_T* list_intersection(LinkList_T* pList1, LinkList_T* pList2);
 LinkList_T* list_union(LinkList_T* pList1, LinkList_T* pList2);
 LinkList_T* list_search(LinkList_T* pList, LinkListEmemType elem);
 void circle_list_add(LinkList_T*& pList, LinkListEmemType elem);
+void llist_add(llist_t *prev, llist_t* pnode);
+void dlist_add(dlist_t *prev, dlist_t* pnode);
+void dlist_add_before(dlist_t* cur, dlist_t* pnode);
+void dlist_del(dlist_t* pnode);
+bool dlist_empty(dlist_t *pDlist);
+
+void dlist_concate(dlist_t* pDlist1, dlist_t* pDlist2);
 
 #endif

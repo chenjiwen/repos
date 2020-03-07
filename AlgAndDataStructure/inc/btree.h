@@ -5,6 +5,7 @@
 #include <vector>
 using namespace std;
 #include "common.h"
+#include "stack.h"
 
 typedef int BTreeElemType;
 
@@ -354,8 +355,8 @@ public:
 	BBTreeNode* BBTreeMergeChild(BBTreeNode *pNodeX, int i);
 	void BBTreeParentDownPreUp(BBTreeNode* pNodeX, int i, BBTreeNode * pNodeY, BBTreeNode *pNodeZ);
 	void BBTreeParentDownSucUp(BBTreeNode* pNodeX, int i, BBTreeNode * pNodeY, BBTreeNode* pNodeZ);
-	void BBTreeAntiClockwiseRotate(BBTreeNode* pNodeX, int i);
 	void BBTreeDelete(BBTreeNode* pNodeX, BBElemType key);
+	void BBTreeDelete(BBElemType key);
 	void BBTreeDestroy(BBTreeNode *pBBTree);
 
 private:
@@ -364,6 +365,57 @@ private:
 	bool dynamic_mem;
 };
 
+
+
+typedef struct BPTreeNode {
+	static const int degree = 2;
+	bool leaf;
+	int  keyNum;
+	struct BPTreeNode* parent;
+#ifdef BBTREE_USE_STATIC_MEM
+	BBElemType key[degree << 1];
+	struct BPTreeNode* child[degree << 1];
+#else
+	BBElemType* key;
+	struct BPTreeNode** child;
+#endif
+	struct llist clist;
+}BPTreeNode;
+
+class BPTree
+{
+public:
+	BPTree(int degree = 2);
+	~BPTree();
+	void BPTreeCreate();
+	BPTreeNode* BPTreeSearch(BPTreeNode* BBTree, BBElemType k, int& indx);
+	BPTreeNode* BPTreeSearch(BBElemType k, int& indx);
+	void BPTreeSplitChild(BPTreeNode* pNodeX, int i);
+	void BPTreeInsert(BBElemType key);
+	void BPTreeInsertNonFull(BPTreeNode* pBBTree, BBElemType key);
+	BBElemType BPTreeSmallest();
+	BBElemType BPTreeSmallest(BPTreeNode* pBBTree);
+	BBElemType BPTreeLargest(BPTreeNode* pBBTree);
+	BBElemType BPTreePrecedence(BBElemType key);
+	BBElemType BPTreeSucessor(BPTreeNode* pBBTree, BBElemType key);
+	BBElemType BPTreePrecedence(BPTreeNode* pBBTree, BBElemType key);
+	BPTreeNode* BPTreeParent(BPTreeNode* pBBTree, BBElemType key, int& idx);
+	BPTreeNode* BPTreeAllocNode();
+	void BPTreeInorderTraverse(BPTreeNode* pBBTree);
+	BPTreeNode* BPTreeRoot();
+	BPTreeNode* BPTreeMergeChild(BPTreeNode* pNodeX, int i);
+	void BPTreeParentDownPreUp(BPTreeNode* pNodeX, int i, BPTreeNode* pNodeY, BPTreeNode* pNodeZ);
+	void BPTreeParentDownSucUp(BPTreeNode* pNodeX, int i, BPTreeNode* pNodeY, BPTreeNode* pNodeZ);
+	void BPTreeAntiClockwiseRotate(BPTreeNode* pNodeX, int i);
+	void BPTreeDelete(BPTreeNode* pNodeX, BBElemType key);
+	void BPTreeDelete(BBElemType key);
+	void BPTreeDestroy(BPTreeNode* pBBTree);
+
+private:
+	BPTreeNode* root;
+	int degree;
+	bool dynamic_mem;
+};
 
 #endif
 

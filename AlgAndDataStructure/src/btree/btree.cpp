@@ -1831,6 +1831,11 @@ BBTreeNode* BBTree::BBTreeRoot() {
 	return root;
 }
 
+/*
+ *child[i]与child[i+1]一起合并到child[d]
+ *释放child[i+1]的资源
+ */
+
 BBTreeNode* BBTree::BBTreeMergeChild(BBTreeNode* pNodeX, int i) {
 	BBTreeNode* pNodeY, * pNodeZ;
 	BBTreeNode* parent = NULL;
@@ -1986,16 +1991,19 @@ void BBTree::BBTreeDelete(BBTreeNode* pNodeX, BBElemType key) {
 		pNode = pNodeX->child[i];
 		if (i > 0 && i < pNodeX->keyNum)
 		{
+			//左右兄弟都存在,node Y用来保存前驱节点， node Z用来保存后继节点
 			pNodeY = pNodeX->child[i - 1];
 			pNodeZ = pNodeX->child[i + 1];
 		}
 		else if( i == 0)
 		{
+			//对于第一个节点的孩子而言，只存在右兄弟
 			pNodeZ = pNodeX->child[i + 1];
 			pNodeY = NULL;
 		}
 		else
 		{
+			//对于最后一个孩子而言，只存在左兄弟
 			pNodeY = pNodeX->child[i - 1];
 			pNodeZ = NULL;
 		}
@@ -2005,11 +2013,14 @@ void BBTree::BBTreeDelete(BBTreeNode* pNodeX, BBElemType key) {
 		{
 			if (pNode->keyNum == degree - 1)
 			{
+				//当前节点的关键字数量少于t,删除的时候需要保证当前节点的数目至少为t
 				if (pNodeY && pNodeZ)
 				{
-					if ((pNodeY->keyNum == degree - 1) && (pNodeY->keyNum == degree - 1))
+					//当前节点的左兄弟和右兄弟都存在
+					if ((pNodeY->keyNum == degree - 1) && (pNodeZ->keyNum == degree - 1))
 					{
 						//case 3.a
+						//左右兄弟都存在，关键字的数目都为t - 1
 						BBTreeNode* ptemp = pNodeX;
 						pNodeX = BBTreeMergeChild(pNodeX, i);
 						if (pNodeX != ptemp)
@@ -2024,37 +2035,16 @@ void BBTree::BBTreeDelete(BBTreeNode* pNodeX, BBElemType key) {
 					}
 					else
 					{
+						//兄弟中至少有一个为t
 						if (pNodeY->keyNum >= degree)
 						{
+							//如果前驱的节点数目大于等于t，前驱来弥补
 							BBTreeParentDownPreUp(pNodeX, i, pNodeY, pNode);
 						}
 						else
 						{
-#if 0
-							//case 3.b
-							pNode->key[pNode->keyNum] = pNodeX->key[i];
-							pNode->keyNum++;
-							pNode->child[pNode->keyNum] = pNodeZ->child[0];
-
-							pNodeX->key[i] = pNodeZ->key[0];
-							for (j = 0; j < pNodeZ->keyNum - 1; j++)
-							{
-								pNodeZ->key[j] = pNodeZ->key[j + 1];
-							}
-							//把最后一个key清零
-							pNodeZ->key[j] = 0;
-
-							if (!pNodeZ->leaf)
-							{
-								for (j = 0; j < pNodeZ->keyNum; j++)
-								{
-									pNodeZ->child[j] = pNodeZ->child[j + 1];
-								}
-							}
-							pNodeZ->keyNum--;
-#else
+							//否则后继来弥补
 							BBTreeParentDownSucUp(pNodeX, i, pNodeZ, pNode);
-#endif
 						}
 
 
@@ -2067,6 +2057,7 @@ void BBTree::BBTreeDelete(BBTreeNode* pNodeX, BBElemType key) {
 					if (pNodeY->keyNum == degree - 1)
 					{
 						//case 3.a
+						//如果child[i+1]为空，i -= 1
 						BBTreeNode* ptemp = pNodeX;					
 						i--;
 						pNodeX = BBTreeMergeChild(pNodeX, i);
@@ -2104,32 +2095,7 @@ void BBTree::BBTreeDelete(BBTreeNode* pNodeX, BBElemType key) {
 					}
 					else
 					{
-#if 0
-						//case 3.b
-						pNode->key[pNode->keyNum] = pNodeX->key[i];
-						pNode->keyNum++;
-						pNode->child[pNode->keyNum] = pNodeZ->child[0];
-
-						pNodeX->key[i] = pNodeZ->key[0];
-						for (j = 0; j < pNodeZ->keyNum - 1; j++)
-						{		
-							pNodeZ->key[j] = pNodeZ->key[j + 1];
-						}
-
-						//把最后一个key清零
-						pNodeZ->key[j] = 0;
-
-						if (!pNodeZ->leaf)
-						{
-							for (j = 0; j < pNodeZ->keyNum; j++)
-							{
-								pNodeZ->child[j] = pNodeZ->child[j + 1];
-							}
-						}
-						pNodeZ->keyNum--;
-#else
 						BBTreeParentDownSucUp(pNodeX, i, pNodeZ, pNode);
-#endif
 						BBTreeDelete(pNode, key);
 					}
 				}
@@ -2184,6 +2150,10 @@ void BBTree::BBTreeDelete(BBTreeNode* pNodeX, BBElemType key) {
 			}
 		}
 	}
+}
+
+void BBTree::BBTreeDelete(BBElemType key) {
+	return BBTreeDelete(root, key);
 }
 
 void BBTree::BBTreeDestroy(BBTreeNode* pBBTree) {
@@ -2252,4 +2222,296 @@ void BBTreeTest()
 	bbtree.BBTreeDelete(bbtree.BBTreeRoot(), 'W');
 	bbtree.BBTreeDelete(bbtree.BBTreeRoot(), 'K');
 #endif
+}
+
+BPTree::BPTree(int bptree_order):root(NULL), degree(bptree_order), dynamic_mem(false) {
+
+}
+
+BPTree::~BPTree() {
+	BPTreeDestroy(root);
+	root = NULL;
+}
+
+BPTreeNode* BPTree::BPTreeAllocNode() {
+	BPTreeNode* pNode = NULL;
+
+	pNode = new BPTreeNode;
+	memset(pNode, 0, sizeof(*pNode));
+#ifdef BBTREE_USE_STATIC_MEM
+	//
+#else
+	pNode->key = new BBElemType[degree];
+	memset(pNode->key, 0, sizeof(BBElemType) * (degree << 1) );
+	pNode->child = new struct BPTreeNode* [degree];
+	memset(pNode->child, 0, sizeof(BPTreeNode*) * (degree << 1));
+	dynamic_mem = true;
+#endif
+	pNode->leaf = true;
+	return pNode;
+}
+
+const int BPTreeNode::degree;
+
+void BPTree::BPTreeCreate() {
+	root = BPTreeAllocNode();
+	root->keyNum = 0;
+	//disk_write(root);
+	root->leaf = true;
+}
+
+void BPTree::BPTreeSplitChild(BPTreeNode* pNodeX, int i) {
+	BPTreeNode* pNodeZ, * pNodeY;
+	int j = 0;
+	int t = degree;
+
+	pNodeZ = BPTreeAllocNode();
+	pNodeY = pNodeX->child[i];
+
+	pNodeZ->leaf = pNodeY->leaf;
+	//B+树的节点个数与孩子个数一致
+	pNodeZ->keyNum = t;
+
+	//设置key
+	for (j = 0; j < pNodeZ->keyNum; j++)
+	{
+		pNodeZ->key[j] = pNodeY->key[j + t];
+		pNodeY->key[j + t] = 0;
+	}
+
+
+	if (!pNodeY->leaf)
+	{
+		//非叶子节点，设置child
+		for (j = 0; j < pNodeZ->keyNum; j++)
+		{
+			pNodeZ->child[j] = pNodeY->child[j + t];
+			pNodeY->child[j + t] = NULL;
+		}
+	}
+
+	pNodeY->keyNum = t;
+
+
+	//节点X的第i个关键字/孩子都要后移
+	//childNum = keyNum + 1
+	for (j = pNodeX->keyNum; j >= i + 1; j--)
+	{
+		pNodeX->child[j] = pNodeX->child[j - 1];
+	}
+	pNodeX->child[i + 1] = pNodeZ;
+
+	for (j = pNodeX->keyNum; j >= i + 1; j--)
+	{
+		pNodeX->key[j] = pNodeX->key[j - 1];
+	}
+	pNodeX->key[i + 1] = pNodeZ->key[0];
+
+	pNodeX->keyNum++;
+
+	if (pNodeZ->leaf)
+	{
+		pNodeZ->clist.next = pNodeY->clist.next;
+		pNodeY->clist.next = &pNodeZ->clist;
+	}
+	//DiskWrite(x)
+	//DiskWrite(y)
+	//DiskWrite(z)
+}
+
+void BPTree::BPTreeInsertNonFull(BPTreeNode* pBBTree, BBElemType key) {
+	int i = 0;
+
+	i = pBBTree->keyNum - 1;
+	//更新索引
+	
+	if (pBBTree->leaf)
+	{
+		while (i >= 0 && pBBTree->key[i] > key)
+		{
+			pBBTree->key[i + 1] = pBBTree->key[i];
+			i--;
+		}
+		i++;
+		pBBTree->key[i] = key;
+		//
+		pBBTree->keyNum++;
+		//DiskWrite()
+	}
+	else
+	{
+		int t = degree;
+		while (i > 0 && key < pBBTree->key[i])
+		{
+			i--;
+		}
+
+		//i++;
+
+		//DiskRead(pBBTree->child[i])
+		if (pBBTree->child[i]->keyNum == (t << 1))
+		{
+			BPTreeSplitChild(pBBTree, i);
+			if (key > pBBTree->key[i + 1])
+			{
+				i += 1;
+			}
+		}
+
+		BPTreeInsertNonFull(pBBTree->child[i], key);
+		//更新索引
+		if (key < pBBTree->key[i])
+		{
+			pBBTree->key[i] = key;
+		}
+	}
+}
+
+
+void BPTree::BPTreeInsert(BBElemType key) {
+	BPTreeNode* r = root;
+	if (r->keyNum == (degree << 1))
+	{
+		// root 是满的，先把root分裂
+		BPTreeNode* s = BPTreeAllocNode();
+		root = s;
+		s->leaf = false;
+		s->keyNum = 1;
+		s->child[0] = r;
+		s->key[0] = r->key[0];
+		if (!r->clist.next)
+		{
+			s->clist.next = &r->clist;
+		}
+		else
+		{
+			s->clist.next = r->clist.next;
+		}		
+		BPTreeSplitChild(s, 0);
+		BPTreeInsertNonFull(s, key);
+	}
+	else
+	{
+		BPTreeInsertNonFull(r, key);
+	}
+}
+
+BPTreeNode* BPTree::BPTreeRoot() {
+	return root;
+}
+
+BPTreeNode* BPTree::BPTreeSearch(BPTreeNode* BPTree, BBElemType key, int& idx)
+{
+	int i = 0;
+	while (i < BPTree->keyNum && key >= BPTree->key[i])
+	{
+		i++;
+	}
+
+	if (i == 0 && key < BPTree->key[0])
+	{
+		return NULL;
+	}
+
+	i--;
+
+	if ((BPTree->leaf) && (i < BPTree->keyNum) && (key == BPTree->key[i]))
+	{
+		idx = i;
+		return BPTree;
+	}
+	else if (BPTree->leaf)
+	{
+		return NULL;
+	}
+	else
+	{
+		return BPTreeSearch(BPTree->child[i], key, idx);
+	}
+}
+
+BPTreeNode* BPTree::BPTreeSearch(BBElemType k, int& indx)
+{
+	return BPTreeSearch(root, k, indx);
+}
+
+BPTreeNode* BPTree::BPTreeMergeChild(BPTreeNode* pNodeX, int i)
+{
+	BPTreeNode* pNodeY = NULL, * pNodeZ = NULL;
+	//child[0]与child[1]
+	//child[keyNum]与child[keyNum -1 ]
+	//child[i]与child[i - 1]与child[i + 1]中keyNum最小的合并
+
+	if (i < pNodeX->keyNum - 1)
+	{
+		pNodeY = pNodeX->child[i];
+		pNodeZ = pNodeX->child[i + 1];
+	}
+	else
+	{
+		pNodeY = pNodeX->child[i - 1];
+		pNodeZ = pNodeX->child[i];
+	}
+
+	return NULL;
+}
+
+void BPTree::BPTreeDestroy(BPTreeNode* pBPTree)
+{
+	int i = 0;
+	if (pBPTree->leaf)
+	{
+		if (pBPTree->child)
+		{
+			if (dynamic_mem)
+			{
+				delete[]pBPTree->child;
+			}
+		}
+
+		if (pBPTree->key)
+		{
+			if (dynamic_mem)
+			{
+				delete[]pBPTree->key;
+			}
+		}
+		delete pBPTree;
+		return;
+	}
+	for (i = 0; i < pBPTree->keyNum; i++)
+	{
+		BPTreeDestroy(pBPTree->child[i]);
+	}
+	delete pBPTree;
+}
+
+void BPTree_test()
+{
+	//string str = "FSQKCLHTVWMRNPABXYDZE";
+	string str = "BCDEFHKLQS";
+	//string str = "DCBA";
+	BPTree bptree;
+	bptree.BPTreeCreate();
+	int idx;
+	BPTreeNode* pNode = NULL;
+	llist_t* plist = NULL;
+	for (string::size_type i = 0; i < str.length(); i++)
+	{
+		bptree.BPTreeInsert(str[i]);
+	}
+
+	plist = bptree.BPTreeRoot()->clist.next;
+	do 
+	{
+		pNode = container_of(plist, BPTreeNode, clist);
+		cout << pNode->key << endl;
+		plist = plist->next;
+	} while (plist);
+
+	pNode = bptree.BPTreeSearch('A', idx);
+	pNode = bptree.BPTreeSearch('B', idx);
+	pNode = bptree.BPTreeSearch('D', idx);
+	pNode = bptree.BPTreeSearch('G', idx);
+	pNode = bptree.BPTreeSearch('Q', idx);
 }
