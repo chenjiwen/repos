@@ -6,6 +6,7 @@
 
 typedef enum
 {
+	DIR_INVALID,
 	DIR_LEFT,
 	DIR_UP,
 	DIR_RIGHT,
@@ -34,7 +35,13 @@ typedef struct
 	PuzNodeColor color;
 }PuzzleTable;
 
-
+typedef struct
+{
+	PosT  pos;
+	DirT  curDir;
+	int   dir_left;
+	int   val;
+}PuzDFSPosT;
 
 
 #endif // !__MISC_H__

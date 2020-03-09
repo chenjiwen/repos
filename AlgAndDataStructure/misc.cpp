@@ -262,7 +262,7 @@ void bst_test()
 	s.generateTrees(3);
 }
 
-int a[8][8] = { {1, 1, 0, 0, 1, 1, 1, 0},
+int a[8][8] = { {1, 1, 1, 0, 1, 1, 1, 0},
 				{0, 1, 0, 1, 1, 0, 1, 1},
 				{0, 1, 1, 0, 1, 1, 0, 1},
 				{0, 0, 1, 1, 0, 1, 1 ,1},
@@ -284,6 +284,24 @@ void puzzleInit()
 			puzzleTbl[i][j].path = { -1, -1 };
 			puzzleTbl[i][j].color = WHITE;
 		}
+	}
+}
+
+void printPath(PosT& pos)
+{
+	cout << '(' << pos.x_p << ',' << pos.y_p << ')' << endl;
+}
+
+void PuzzlePath(PosT& start, PosT& end)
+{
+	PosT curPos = end;
+
+	cout << "\nPuzzleBFS Path:" << endl;
+	printPath(end);
+	while (puzzleTbl[curPos.x_p][curPos.y_p].color == BLACK && !(curPos.x_p == start.x_p && curPos.y_p == start.y_p))
+	{
+		printPath(puzzleTbl[curPos.x_p][curPos.y_p].path);
+		curPos = puzzleTbl[curPos.x_p][curPos.y_p].path;
 	}
 }
 
@@ -319,7 +337,7 @@ bool CheckIfNeedEnqueue(PosT& pos_adj, LinearQue& LQue)
 	return false;
 }
 
-void PuzzleSolution(PosT& start, PosT& end)
+void PuzzleSolutionBFS(PosT& start, PosT& end)
 {
 	LinearQue LQue;
 	PosT curPos;
@@ -365,6 +383,7 @@ void PuzzleSolution(PosT& start, PosT& end)
 			
 			if (found) 
 			{
+				//release the resource in the queue
 				continue;
 			}
 		}
@@ -410,32 +429,116 @@ void PuzzleSolution(PosT& start, PosT& end)
 		//所有相关联的点/位置都处理完了，设置当前节点的颜色为BLACK/可通
 		puzzleTbl[curPos.x_p][curPos.y_p].color = BLACK;
 	}
-
+	PuzzlePath(start, end);
 }
 
-void printPath(PosT& pos)
+bool CanThisNodePass(PuzDFSPosT& curPos)
 {
-	cout << '(' << pos.x_p << ',' << pos.y_p << ')' << endl;
+	if (!curPos.dir_left || !curPos.val)
+		return false;
+
+	return true;
 }
 
-void PuzzlePath(PosT& start, PosT& end)
+DirT getPrevDir(DirT dir)
 {
-	PosT curPos = end;
+	return (DirT)((int)dir - 1);
+}
 
-	cout << "\nPuzzlePath:" << endl;
-	printPath(end);
-	while (puzzleTbl[curPos.x_p][curPos.y_p].color == BLACK && !(curPos.x_p == start.x_p && curPos.y_p == start.y_p))
+void PuzzleSolutionDFS(PosT& start, PosT& end)
+{
+	stack stack(100);
+	PuzDFSPosT  nextPos;
+	PuzDFSPosT * pos = NULL;
+	bool found = false;
+
+	pos = new PuzDFSPosT;
+	pos->pos.x_p = start.x_p;
+	pos->pos.y_p = start.y_p;
+	pos->curDir = DIR_INVALID;
+	pos->dir_left = 4;
+	pos->val = puzzleTbl[start.x_p][start.y_p].val;
+	puzzleTbl[start.x_p][start.y_p].color = BLACK;
+
+	stack.push(pos);
+
+	while (!stack.stack_empty())
 	{
-		printPath(puzzleTbl[curPos.x_p][curPos.y_p].path);
-		curPos = puzzleTbl[curPos.x_p][curPos.y_p].path;
+		pos = (PuzDFSPosT*)(stack.get_top());
+		if (pos->pos.x_p == end.x_p && pos->pos.y_p == end.y_p)
+		{
+			break;
+		}
+
+		if (!pos->dir_left || !pos->val)
+		{
+			//当前节点的方向已经搜索结束或者当前节点值为不可到达（0）
+			stack.pop();
+			puzzleTbl[pos->pos.x_p][pos->pos.y_p].color = GRAY;
+			delete pos;
+		}
+		else
+		{
+			nextPos = *pos;
+			//搜索下一个方向
+			switch (pos->curDir)
+			{
+			case DIR_LEFT:
+				nextPos.pos.x_p += 1;
+				pos->curDir = DIR_UP;
+				break;
+			case DIR_RIGHT:
+				nextPos.pos.x_p -= 1;
+				pos->curDir = DIR_BOT;
+				break;
+			case DIR_UP:
+				nextPos.pos.y_p += 1;
+				pos->curDir = DIR_RIGHT;
+				break;
+			case DIR_INVALID:
+			case DIR_BOT:
+			default://DIR_BOTTOM
+				pos->curDir  = DIR_LEFT;
+				nextPos.pos.y_p -= 1;
+				break;
+			}
+			pos->dir_left--;
+			if (validPos(nextPos.pos))
+			{
+				if (puzzleTbl[nextPos.pos.x_p][nextPos.pos.y_p].color == WHITE)
+				{
+					pos = new PuzDFSPosT;
+					pos->pos.x_p = nextPos.pos.x_p;
+					pos->pos.y_p = nextPos.pos.y_p;
+					pos->curDir = nextPos.curDir;
+					pos->dir_left = 4;
+					pos->val = puzzleTbl[pos->pos.x_p][pos->pos.y_p].val;
+					puzzleTbl[nextPos.pos.x_p][nextPos.pos.y_p].color = BLACK;
+					stack.push(pos);
+				}
+			}
+		}
+	}
+
+	cout << "\npuzzleDFS solution:" << endl;
+	while (!stack.stack_empty())
+	{
+		pos = (PuzDFSPosT*)(stack.pop());
+		printPath(pos->pos);
+		delete pos;
 	}
 }
+
+
 
 void PuzzleTest()
 {
 	PosT start = { 0, 0 };
 	PosT end = { 7, 7 };
 	puzzleInit();
-	PuzzleSolution(start, end);
-	PuzzlePath(start, end);
+	PuzzleSolutionBFS(start, end);
+
+	puzzleInit();
+	PuzzleSolutionDFS(start, end);
+	
 }
