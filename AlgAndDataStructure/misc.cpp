@@ -1,4 +1,8 @@
 #include "stack.h"
+#include "misc.h"
+#include "queue.h"
+#include<iostream>
+using namespace std;
 
 #if 0
 
@@ -258,5 +262,180 @@ void bst_test()
 	s.generateTrees(3);
 }
 
+int a[8][8] = { {1, 1, 0, 0, 1, 1, 1, 0},
+				{0, 1, 0, 1, 1, 0, 1, 1},
+				{0, 1, 1, 0, 1, 1, 0, 1},
+				{0, 0, 1, 1, 0, 1, 1 ,1},
+				{0, 0, 0, 1, 0, 1, 1, 0},
+				{0, 1, 1, 1, 0, 1, 1, 1},
+				{0, 1, 0, 0, 1, 1, 0, 1},
+				{0, 1, 1, 1, 1, 0, 0, 1}
+};
+PuzzleTable puzzleTbl[puzzle_array_size][puzzle_array_size];
+
+void puzzleInit()
+{
+	int i, j = 0;
+	for (i = 0; i < puzzle_array_size; i++)
+	{
+		for (j = 0; j < puzzle_array_size; j++)
+		{
+			puzzleTbl[i][j].val = a[i][j];
+			puzzleTbl[i][j].path = { -1, -1 };
+			puzzleTbl[i][j].color = WHITE;
+		}
+	}
+}
+
+bool validPos(PosT& pos)
+{
+	if (pos.x_p <= puzzle_array_size - 1 && pos.x_p >= 0 && pos.y_p <= puzzle_array_size - 1 && pos.y_p >= 0)
+		return true;
+
+	return false;
+}
+
+bool CheckIfNeedEnqueue(PosT& pos_adj, LinearQue& LQue)
+{
+	PosT* pos;
+	if (validPos(pos_adj) && (puzzleTbl[pos_adj.x_p][pos_adj.y_p].color == WHITE))
+	{
+		//如果左边节点合法且是白色的节点
+		if (puzzleTbl[pos_adj.x_p][pos_adj.y_p].val == 0)
+		{
+			//如果左边的位置上的值为0/不通
+			puzzleTbl[pos_adj.x_p][pos_adj.y_p].color = GRAY;
+		}
+		else
+		{
+			//如果位置可通，需要入列
+			pos = new PosT;
+			pos->x_p = pos_adj.x_p;
+			pos->y_p = pos_adj.y_p;
+			LQue.Enqueue(pos);
+			return true;
+		}
+	}
+	return false;
+}
+
+void PuzzleSolution(PosT& start, PosT& end)
+{
+	LinearQue LQue;
+	PosT curPos;
+	PosT* pos = NULL;
+	PosT left, right, up, bottom;
+	bool found = false;
+
+	if (!validPos(start) || !validPos(end))
+	{
+		return;
+	}
+
+	if (puzzleTbl[start.x_p][start.y_p].val == 0 || puzzleTbl[end.x_p][end.y_p].val == 0)
+	{
+		return;
+	}
+
+	pos = new PosT;
+	pos->x_p = start.x_p;
+	pos->y_p = start.y_p;
+	curPos = start;
+	puzzleTbl[curPos.x_p][curPos.y_p].color = BLACK;
+	LQue.Enqueue(pos);
+	while(!LQue.QueEmpty())
+	{ 
+		//上下左右四个点需要检查
+		//初始的颜色都是白色，如果当前值为0涂色为灰色表示不可通达
+		//如果当前节点可通，涂色为黑色
+		//对于白色且可通的节点入队列，灰色不可通的节点不入列，同时保存路径
+
+		
+		pos = (PosT*)LQue.Dequeue();
+		curPos = *pos;
+		delete pos;
+
+		if (found || (curPos.x_p == end.x_p && curPos.y_p == end.y_p))
+		{
+			if (!found)
+			{
+				puzzleTbl[curPos.x_p][curPos.y_p].color = BLACK;
+				found = true;
+			}
+			
+			if (found) 
+			{
+				continue;
+			}
+		}
+
+		//当前位置a[i][j]
+		//当前位置的左边，/a[i][j - 1]
+		left.x_p = curPos.x_p;
+		left.y_p = curPos.y_p - 1;
+		if (CheckIfNeedEnqueue(left, LQue))
+		{
+			puzzleTbl[left.x_p][left.y_p].path = curPos;
+		}
 
 
+		//当前节点的右边的位置
+		//a[i][j+ 1]
+		right.x_p = curPos.x_p;
+		right.y_p = curPos.y_p + 1;
+		if (CheckIfNeedEnqueue(right, LQue))
+		{
+			puzzleTbl[right.x_p][right.y_p].path = curPos;
+		}
+
+		//当前节点的上方位置
+		//a[i+1][j]
+		up.x_p = curPos.x_p + 1;
+		up.y_p = curPos.y_p ;
+
+		if (CheckIfNeedEnqueue(up, LQue))
+		{
+			puzzleTbl[up.x_p][up.y_p].path = curPos;
+		}
+
+		//当前节点的下方位置
+		//a[i - 1][j]
+		bottom.x_p = curPos.x_p - 1;
+		bottom.y_p = curPos.y_p;
+		if (CheckIfNeedEnqueue(bottom, LQue))
+		{
+			puzzleTbl[bottom.x_p][bottom.y_p].path = curPos;
+		}
+
+		//所有相关联的点/位置都处理完了，设置当前节点的颜色为BLACK/可通
+		puzzleTbl[curPos.x_p][curPos.y_p].color = BLACK;
+	}
+
+}
+
+void printPath(PosT& pos)
+{
+	cout << '(' << pos.x_p << ',' << pos.y_p << ')' << endl;
+}
+
+void PuzzlePath(PosT& start, PosT& end)
+{
+	PosT curPos = end;
+
+	cout << "\nPuzzlePath:" << endl;
+	printPath(end);
+	while (puzzleTbl[curPos.x_p][curPos.y_p].color == BLACK && !(curPos.x_p == start.x_p && curPos.y_p == start.y_p))
+	{
+		printPath(puzzleTbl[curPos.x_p][curPos.y_p].path);
+		curPos = puzzleTbl[curPos.x_p][curPos.y_p].path;
+	}
+}
+
+void PuzzleTest()
+{
+	PosT start = { 0, 0 };
+	PosT end = { 7, 7 };
+	puzzleInit();
+	PuzzleSolution(start, end);
+	PuzzlePath(start, end);
+}

@@ -229,7 +229,7 @@ void graphic_test()
 	pGSquare = GAdjT.SquareG();
 }
 
-Graph::Graph():VNum(0), pGAdjTable(NULL), TopTable(NULL), pBFSTable(NULL)
+Graph::Graph():VNum(0), pGAdjTable(NULL), TopTable(NULL), pBFSTable(NULL), pDijTable(NULL)
 {
 
 }
@@ -254,6 +254,11 @@ Graph::~Graph()
 	if (pBFSTable)
 	{
 		delete []pBFSTable;
+	}
+
+	if(pDijTable)
+	{
+		delete []pDijTable;
 	}
 }
 
@@ -401,12 +406,22 @@ int* Graph::GraphTopSortByStack()
 	return TopTable;
 }
 
+
+
+GADTNode* Graph::GraphGetTableNode(int node_id)
+{
+	return pGAdjTable->GetVertexNode(node_id);
+}
+
+GPATHTable test_table[20];
+
 void* Graph::GraphDijkstra(int start_vetx)
 {
 	FibHeap fibHeap;
 	GPATHTable* pGPATHDijkTable = NULL;
-	int i = 0;
-	pGPATHDijkTable = new GPATHTable[VNum];
+	int i = 0, nodeKey;
+	//pGPATHDijkTable = new GPATHTable[VNum];
+	pGPATHDijkTable = test_table;
 	FibHeapNode* pMinNode = NULL, *pFibTNode = NULL;
 	GADTNode* pNodeV = NULL, *pNodeW = NULL;
 	llist_t* plist = NULL;
@@ -418,41 +433,69 @@ void* Graph::GraphDijkstra(int start_vetx)
 		pGPATHDijkTable[i].dist = INT_MAX;
 		pGPATHDijkTable[i].path = -1;
 	}
-	pGPATHDijkTable[start_vetx].dist = 0;
+
+
+	//dist is the key of FibHeap
+	pGPATHDijkTable[start_vetx - 1].dist = 0;
+	pGPATHDijkTable[i].path = 0;
 
 	dijk_vtex = start_vetx;
-	fibHeap.FibHeapInsert(pGPATHDijkTable[start_vetx].dist, pGAdjTable->GetVertexNode(start_vetx - 1));
+
+	//pNodeV = pGAdjTable->GetVertexNode(start_vetx - 1);
+	//derive the node table list for start vertex
+	pNodeV = GraphGetTableNode(start_vetx - 1);
+
+	//since the dist is the key of FibHeap, need map the between dist and node
+	//store the fibHeap node in the table[nodeKey]->data for the nodeKey so that we can decrease key
+	//else need find/search the fibNode when decrease the key
+	pNodeV->data = fibHeap.FibHeapInsert(pGPATHDijkTable[start_vetx - 1].dist, pNodeV);
 
 	for (;;)
 	{
+		//get the min dist from FibHeap
 		pMinNode = fibHeap.FibHeapExtractMin();
 		
 		if (!pMinNode)
 		{
 			break;
 		}
+
+		//get the table Node/node key from the minNode of fibHeap
 		pNodeV = static_cast<GADTNode*>(pMinNode->priv);
+
+		//update the Dijkstra table for the node
 		pGPATHDijkTable[pNodeV->nodeKey - 1].visited = true;
 
+		//remember delete/release the pMinNode here
+		delete pMinNode;
+
+		//deriver the adjcent table of NodeV
 		plist = pNodeV->list.next;
 		while (plist)
 		{
+			//node adjcent to nodeV
 			pNodeW = container_of(plist, GADTNode, list);
-			if (!pGPATHDijkTable[pNodeW->nodeKey - 1].visited)
+			nodeKey = pNodeW->nodeKey;
+			if (!pGPATHDijkTable[nodeKey - 1].visited)
 			{
 				//weight = weightVec[pNodeV->nodeKey - 1][pNodeW->nodeKey - 1];
 				weight = GrapGetWeight(pNodeV->nodeKey, pNodeW->nodeKey);
-				if (pGPATHDijkTable[pNodeW->nodeKey - 1].dist == INT_MAX)
+				if (pGPATHDijkTable[nodeKey - 1].dist == INT_MAX)
 				{
-					fibHeap.FibHeapInsert(pGPATHDijkTable[pNodeW->nodeKey - 1].dist, pGAdjTable->GetVertexNode(pNodeW->nodeKey - 1));
+					//update the dist of the node adjcent to NodeV for the first time and add the dist into FibHeap
+					pGPATHDijkTable[nodeKey - 1].dist = pGPATHDijkTable[pNodeV->nodeKey - 1].dist + weight;
+					pGPATHDijkTable[nodeKey - 1].path = pNodeV->nodeKey;
+					//pNodeW = pGAdjTable->GetVertexNode(pNodeW->nodeKey - 1);
+					pNodeW = GraphGetTableNode(nodeKey - 1);
+					pNodeW->data = fibHeap.FibHeapInsert(pGPATHDijkTable[nodeKey - 1].dist, pNodeW);
 				}
 				else if (pGPATHDijkTable[pNodeV->nodeKey - 1].dist + weight < pGPATHDijkTable[pNodeW->nodeKey - 1].dist)
 				{
-					pGPATHDijkTable[pNodeW->nodeKey - 1].dist = pGPATHDijkTable[pNodeV->nodeKey - 1].dist + weight;
-					pGPATHDijkTable[pNodeW->nodeKey].path = pNodeV->nodeKey;
-					//fibHeap.FibHeapInsert(pGPATHDijkTable[pNodeW->nodeKey - 1].dist, pGAdjTable->GetVertexNode(pNodeW->nodeKey - 1));
-					pFibTNode = container_of(pGAdjTable->GetVertexNode(pNodeW->nodeKey - 1), FibHeapNode, priv);
-					fibHeap.FibHeapDecreseKey(pFibTNode, pGPATHDijkTable[pNodeW->nodeKey - 1].dist);
+					//update the dist of the Dijkstra table and decrease the key of the FibHeapNode
+					pGPATHDijkTable[nodeKey - 1].dist = pGPATHDijkTable[pNodeV->nodeKey - 1].dist + weight;
+					pGPATHDijkTable[nodeKey - 1].path = pNodeV->nodeKey;
+					pNodeW = GraphGetTableNode(nodeKey - 1);
+					fibHeap.FibHeapDecreseKey((FibHeapNode*)pNodeW->data, pGPATHDijkTable[nodeKey - 1].dist);
 				}
 			}
 			plist = plist->next;
@@ -496,6 +539,152 @@ void Graph::GraphBFS(int start_vertex)
 	}
 }
 
+int time = 0;
+
+GDFSTable* Graph::GraphDFS()
+{
+	GDFSTable* pGDFSTbl = NULL;
+	pGDFSTbl = new GDFSNode[VNum];
+	int i = 0;
+
+	for (i = 0; i < VNum; i++)
+	{
+		pGDFSTbl[i].color = GNODE_WHITE;
+		pGDFSTbl[i].discover = 0;
+		pGDFSTbl[i].finish = 0;
+		pGDFSTbl[i].prev = -1;
+	}
+	time = 0;
+	for (i = 0; i < VNum; i++)
+	{
+		if (pGDFSTbl[i].color == GNODE_WHITE)
+		{
+			GraphDFSVisit(pGDFSTbl, pGAdjTable, i + 1);
+		}
+	}
+	return pGDFSTbl;
+}
+
+void Graph::GraphDFSVisit(GDFSTable* pGDFSTbl, GADJTable* pGadjTbl, int vertex)
+{
+	int i = 0;
+	pllist_t plist = NULL;
+	GADTNode* pNode = NULL, *pTblEntry = NULL;
+
+	time++;
+	pGDFSTbl[vertex - 1].discover = time;
+	pGDFSTbl[vertex - 1].color = GNODE_GRAY;
+
+	pTblEntry = GraphGetTableNode(vertex);
+	plist = pTblEntry->list.next;
+	while (plist)
+	{
+		pNode = container_of(plist, GADTNode, list);
+		if (pGDFSTbl[pNode->nodeKey - 1].color == GNODE_WHITE)
+		{
+			pGDFSTbl[pNode->nodeKey - 1].prev = vertex;
+			GraphDFSVisit(pGDFSTbl, pGadjTbl, pNode->nodeKey);
+		}
+		plist = plist->next;
+	}
+	time++;
+	pGDFSTbl[vertex - 1].finish = time;
+	pGDFSTbl[vertex - 1].color = GNODE_BLACK;
+}
+
+int degree[10];
+bool visited[10];
+
+void Graph::GraphVisitEdgeTwice(int vertex)
+{
+	stack Stack;
+	LinearQue LQue;
+	int i = 0;
+	pllist_t plist = NULL;
+	GADTNode* pNode = NULL, *pNodeW = NULL, *pNodeV;
+	int count = 0;
+	bool first = true;
+
+	for (i = 0; i < VNum; i++)
+	{
+		degree[i] = GrapNodeInOutDegree(i + 1);
+		visited[i] = false;
+	}
+	cout << "\n \t GraphVisitEdgeTwice:" << endl;
+	pNode = GraphGetTableNode(vertex - 1);
+
+	Stack.push(pNode);
+	count++;
+	while (!Stack.stack_empty())
+	{
+		if (count >= VNum)
+		{
+			break;
+		}
+		pNode = static_cast<GADTNode*>(Stack.get_top());
+		pNode = GraphGetTableNode(pNode->nodeKey - 1);
+		plist = pNode->list.next;
+		while (plist)
+		{
+			pNodeW = container_of(plist, GADTNode, list);
+			if (!visited[pNodeW->nodeKey - 1])
+			{
+				LQue.Enqueue(pNodeW);
+				degree[pNode->nodeKey - 1]--;
+				degree[pNodeW->nodeKey - 1]--;
+			}
+
+			plist = plist->next;
+		}
+
+		while(!LQue.QueEmpty())
+		{
+			pNodeW = static_cast<GADTNode*>(LQue.Dequeue());
+			if (!LQue.QueEmpty())
+			{
+				cout << pNode->nodeKey << "->" << pNodeW->nodeKey << endl;
+				cout << pNodeW->nodeKey << "->" << pNode->nodeKey << endl;
+				degree[pNodeW->nodeKey - 1]--;
+				degree[pNode->nodeKey - 1]--;
+			}
+			else
+			{
+				cout << pNode->nodeKey << "->" << pNodeW->nodeKey << endl;
+				Stack.push(pNodeW);
+				count++;
+				visited[pNode->nodeKey - 1] = true;
+				//degree[pNode->nodeKey - 1]--;
+				//degree[pNodeW->nodeKey - 1]--;
+			}
+		}
+	}
+
+	pNodeW = (GADTNode*)Stack.pop();
+	while (!Stack.stack_empty())
+	{
+		pNodeV = (GADTNode*)Stack.pop();
+		degree[pNodeV->nodeKey - 1]--;
+		degree[pNodeW->nodeKey - 1]--;
+		cout << pNodeW->nodeKey << "->" << pNodeV->nodeKey << endl;
+		pNodeW = pNodeV;
+	}
+}
+
+int Graph::GraphNodeOutDegree(int vertex)
+{
+	return pGAdjTable->NodeOutDegree(vertex);
+}
+
+int Graph::GrapNodeInDegree(int vertex)
+{
+	return pGAdjTable->NodeInDegree(vertex);
+}
+
+int Graph::GrapNodeInOutDegree(int vertex)
+{
+	return GraphNodeOutDegree(vertex) + GrapNodeInDegree(vertex);
+}
+
 void Graph::PathPrint(GPATHTable* pathTable, int to_vtex)
 {
 	cout << to_vtex;
@@ -526,10 +715,11 @@ void graph_test()
 {
 	Graph graph(7);
 	int* ptable = NULL;
-	vector<int> vec1, vec2, vec3, vec4, vec5, vec6, vec7;
+	vector<int> vec1, vec2, vec3, vec4, vec5, vec6, vec7, vec8;
 	vector<vector<int>> adj_vec;
+	vector<int> wt1, wt2, wt3, wt4, wt5, wt6, wt7;
 	int i = 0;
-
+/*
 	vec1.push_back(2);
 	vec1.push_back(4);
 	//vec1.push_back(3);
@@ -560,16 +750,82 @@ void graph_test()
 	adj_vec.push_back(vec6);
 	adj_vec.push_back(vec7);
 
-	graph.GraphBuildADJTable(adj_vec);
-	ptable = graph.GraphTopSort();
-	//ptable = graph.GraphTopSortByStack();
-	graph.GraphBFS(3);
-	cout << "\n Topsort order:" << endl;
-	for (i = 0; i < 7; i++)
-	{
-		cout << " " << ptable[i] <<" ";
-	}
-	cout << endl;
+	graph.GraphBuildWeightTable(2, 1, 2);
+	graph.GraphBuildWeightTable(1, 1, 4);
 
-	graph.PathPrint(GPATH_BFS, 3);
+	graph.GraphBuildWeightTable(10, 2, 5);
+	graph.GraphBuildWeightTable(3, 2, 4);
+
+	graph.GraphBuildWeightTable(4, 3, 1);
+	graph.GraphBuildWeightTable(5, 3, 6);
+
+	graph.GraphBuildWeightTable(2, 4, 3);
+	graph.GraphBuildWeightTable(8, 4, 6);
+	graph.GraphBuildWeightTable(4, 4, 7);
+	graph.GraphBuildWeightTable(2, 4, 5);
+
+	graph.GraphBuildWeightTable(6, 5, 7);
+
+	graph.GraphBuildWeightTable(1, 7, 6);
+
+
+	//graph.GraphBuildADJTable(adj_vec);
+	//ptable = graph.GraphTopSort();
+	//ptable = graph.GraphTopSortByStack();
+	//graph.GraphBFS(3);
+	//graph.GraphDijkstra(1);
+	//cout << "\n Topsort order:" << endl;
+	//for (i = 0; i < 7; i++)
+	//{
+	//	cout << " " << ptable[i] <<" ";
+	//}
+	//cout << endl;
+
+	//graph.PathPrint(GPATH_BFS, 3);
+*/
+
+/*
+	vec1.push_back(2);
+	vec1.push_back(7);
+	vec1.push_back(6);
+
+	vec2.push_back(1);
+	vec2.push_back(7);
+	vec2.push_back(3);
+
+	vec3.push_back(2);
+	vec3.push_back(7);
+	vec3.push_back(4);
+
+	vec4.push_back(3);
+	vec4.push_back(7);
+	vec4.push_back(5);
+
+	vec5.push_back(4);
+	vec5.push_back(7);
+	vec5.push_back(6);
+
+	vec6.push_back(1);
+	vec6.push_back(7);
+	vec6.push_back(5);
+
+	vec7.push_back(1);
+	vec7.push_back(2);
+	vec7.push_back(3);
+	vec7.push_back(4);
+	vec7.push_back(5);
+	vec7.push_back(6);
+*/
+
+
+	adj_vec.push_back(vec1);
+	adj_vec.push_back(vec2);
+	adj_vec.push_back(vec3);
+	adj_vec.push_back(vec4);
+	adj_vec.push_back(vec5);
+	adj_vec.push_back(vec6);
+	adj_vec.push_back(vec7);
+
+	graph.GraphBuildADJTable(adj_vec);
+	graph.GraphVisitEdgeTwice(1);
 }

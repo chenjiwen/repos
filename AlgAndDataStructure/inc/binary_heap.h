@@ -135,11 +135,12 @@ typedef int FibHeapElement;
 typedef struct FibHeapNode 
 {
     FibHeapElement key;
-    struct FibHeapNode* parent;
-    struct FibHeapNode* child;
-    dlist_t list;
-    int degree;//child num in list
-    bool marked;
+    struct FibHeapNode* parent;//parent of node
+    struct FibHeapNode* first_child;//child of node
+    dlist   sibling;//sibling of the child
+    dlist_t list;  //dlink list used to link in the root list
+    int     degree;//child num in list
+    bool    marked;
     void* priv;
 }FibHeapNode;
 
@@ -149,7 +150,7 @@ public:
     FibHeap();
     ~FibHeap();
     void FibHeapInsert(FibHeapNode *pNode);
-    void FibHeapInsert(FibHeapElement key, void *);
+    void* FibHeapInsert(FibHeapElement key, void *);
     FibHeap* FibHeapUnion(FibHeap* , FibHeap*);
     int FibHeapMaxDegNum();
     void FibHeapLink(FibHeapNode *pNodeY, FibHeapNode * pNodeX);
@@ -161,10 +162,11 @@ public:
     void FibHeapDelete(FibHeapNode *pNode);
     void FibHeapDestroyMinHeap(FibHeapNode*);
     void FibHeapDestroy();
+    bool FibCheckRootListDegree();
+    void FibHeapDump(FibHeapNode* pFibHeap);
 
 private:
     FibHeapNode* minNode;
-    dlist_t  rootlist;
     int NodeNum;
 };
 

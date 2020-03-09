@@ -108,6 +108,7 @@ extern void BNTreeTest();
 extern void BNHeapTest();
 extern void graphic_test();
 extern void graph_test();
+extern void PuzzleTest();
 
 int main(int argc, char **argv) {
 	uint32_t array_a[5] = {1, 2, 3, 4, 5};
@@ -159,6 +160,11 @@ int main(int argc, char **argv) {
 		delete pNode;
 	}
 
+	llist_t list, list1;
+	llist_t* pclist = NULL;
+	pclist = list.next;
+	list.next = &list1;
+
 	int array_c[] = {3,2,1,2,3,4,3,4,5,9,10,11};
 
 	//isPossibleDivide(array_c, sizeof(array_c)/sizeof(array_c[0]), 3);
@@ -181,7 +187,8 @@ int main(int argc, char **argv) {
 	//BPTree_test();
 
 	//graphic_test();
-	graph_test();
+	//graph_test();
+	PuzzleTest();
 	bheap.dump_heap();
 
 	elem = select_kth(2, 0, 9, array);

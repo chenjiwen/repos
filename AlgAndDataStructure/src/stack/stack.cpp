@@ -50,7 +50,7 @@ StackElemType stack::pop() {
  *调用者保证get_top之前栈非空
  */
 StackElemType stack::get_top() {
-	return base[top];
+	return base[top - 1];
 }
 
 DLinkList::DLinkList() {
@@ -425,6 +425,10 @@ void llist_del()
 
 void dlist_add(dlist_t* prev, dlist_t* pnode)
 {
+	if (prev->next == pnode)
+	{
+		return;
+	}
 	pnode->next = prev->next;
 	prev->next->prev = pnode;
 
@@ -434,6 +438,10 @@ void dlist_add(dlist_t* prev, dlist_t* pnode)
 
 void dlist_add_before(dlist_t* cur, dlist_t* pnode)
 {
+	if (cur->next == pnode)
+	{
+		return;
+	}
 	cur->prev->next = pnode;
 	pnode->prev = cur->prev;
 

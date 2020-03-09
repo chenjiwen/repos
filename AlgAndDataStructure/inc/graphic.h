@@ -61,6 +61,21 @@ typedef struct
 	int   path;
 }TableEntry, GPATHTable;
 
+typedef enum
+{
+	GNODE_WHITE,
+	GNODE_GRAY,
+	GNODE_BLACK
+}GNodeColor;
+
+typedef struct
+{
+	GNodeColor color;
+	unsigned   discover;
+	unsigned   finish;
+	int        prev;
+}GDFSNode, GDFSTable;
+
 class Graph
 {
 public:
@@ -73,15 +88,24 @@ public:
 	int* GraphTopSort();
 	int* GraphTopSortByStack();
 	void GraphBFS(int start_vertex);
+	GDFSTable* GraphDFS();
+	void GraphDFSVisit(GDFSTable* pGDFSTbl, GADJTable*, int vertex);
 	void* GraphDijkstra(int start_vetx);
+	GADTNode* GraphGetTableNode(int node_id);
 	void PathPrint(GraphPathType pathType, int start_vtex);
 	void PathPrint(GPATHTable* pathTable, int start_vtex);
+	int GraphNodeOutDegree(int vertex);
+	int GrapNodeInDegree(int vertex);
+	int GrapNodeInOutDegree(int);
+	void GraphVisitEdgeTwice(int vertex);
 
 private:
 	GADJTable *pGAdjTable;
 	int* TopTable;
 	int VNum;
 	GPATHTable* pBFSTable;
+	GPATHTable* pDijTable;
+	GDFSTable* pDFSPathTbl;
 	bool has_loop;
 	int  loop_vertex;
 	int  start_vertex;

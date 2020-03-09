@@ -339,16 +339,17 @@ FibHeap::~FibHeap() {
 
 void FibHeap::FibHeapInsert(FibHeapNode* pNode) {
 	pNode->degree = 0;
-	pNode->child = NULL;
+	pNode->first_child = NULL;
 	pNode->marked = false;
+	pNode->parent = NULL;
 
 	if (!minNode)
 	{
 		minNode = pNode;
-		dlist_add(&rootlist, &pNode->list);
 	}
 	else
 	{
+		//insert the node of the left of minNode
 		dlist_add_before(&minNode->list, &pNode->list);
 		if (pNode->key < minNode->key)
 		{
@@ -359,14 +360,16 @@ void FibHeap::FibHeapInsert(FibHeapNode* pNode) {
 	NodeNum += 1;
 }
 
-void FibHeap::FibHeapInsert(FibHeapElement key, void *priv)
+void* FibHeap::FibHeapInsert(FibHeapElement key, void *priv)
 {
 	FibHeapNode* pNode = NULL;
 
 	pNode = new FibHeapNode;
+	//memset(pNode, 0, sizeof(*pNode));
 	pNode->key = key;
 	pNode->priv = priv;
 	FibHeapInsert(pNode);
+	return pNode;
 }
 
 FibHeap* FibHeap::FibHeapUnion(FibHeap* pFH1, FibHeap* pFH2) 
@@ -378,23 +381,12 @@ FibHeap* FibHeap::FibHeapUnion(FibHeap* pFH1, FibHeap* pFH2)
 	pFH->minNode = pFH1->minNode;
 	pFH->NodeNum = pFH1->NodeNum;
 
-	if (!dlist_empty(&pFH1->rootlist))
+	if (pFH2->minNode && pFH->minNode)
 	{
-		plist = pFH1->rootlist.next;
-		//need delete the list head before concatenate
-		dlist_del(&pFH1->rootlist);
-		dlist_concate(&pFH->rootlist, plist);
+		dlist_concate(&pFH->minNode->list, &pFH2->minNode->list);
 	}
 
-	if (!dlist_empty(&pFH2->rootlist))
-	{
-		plist = pFH2->rootlist.next;
-		//need delete the list head before concatenate
-		dlist_del(&pFH2->rootlist);
-		dlist_concate(&pFH->rootlist, plist);
-	}
-
-	if (!pFH->minNode || (pFH1->minNode->key < pFH2->minNode->key))
+	if (!pFH->minNode || (pFH2->minNode && pFH1->minNode->key < pFH2->minNode->key))
 	{
 		pFH->minNode = pFH2->minNode;
 	}
@@ -403,9 +395,6 @@ FibHeap* FibHeap::FibHeapUnion(FibHeap* pFH1, FibHeap* pFH2)
 
 	pFH1->minNode = NULL;
 	pFH2->minNode = NULL;
-
-	delete pFH1;
-	delete pFH2;
 
 	return pFH;
 }
@@ -447,8 +436,19 @@ int FibHeap::FibHeapMaxDegNum()
 
 void FibHeap::FibHeapLink(FibHeapNode* pNodeY, FibHeapNode* pNodeX)
 {
+	//delete Y from root list
 	dlist_del(&pNodeY->list);
-	dlist_add(&pNodeX->child->list, &pNodeY->list);
+
+	//make Y the child of X
+	if (!pNodeX->first_child)
+	{
+		pNodeX->first_child = pNodeY;
+	}
+	else
+	{
+		dlist_add(&pNodeX->first_child->sibling, &pNodeY->sibling);
+	}
+	
 	pNodeX->degree++;
 	pNodeY->parent = pNodeX;
 	pNodeY->marked = false;
@@ -468,26 +468,29 @@ void FibHeap::FibHeapConsolidate()
 		table[i] = NULL;
 	}
 
-	plist = rootlist.next;
+	plist = &minNode->list;
 	do
 	{
 		pNodeW = container_of(plist, FibHeapNode, list);
 		pNodeX = pNodeW;
 		d = pNodeX->degree;
-		while (table[d])
+		while (d < num && table[d])
 		{
 			pNodeY = table[d];
 			if (pNodeX->key > pNodeY->key)
 			{
 				swap(pNodeX, pNodeY);
 			}
+
 			FibHeapLink(pNodeY, pNodeX);
+			plist = &minNode->list;
+
 			table[d] = NULL;
 			d = (d + 1)%num;
 		}
 		table[d] = pNodeX;
 		plist = plist->next;
-	} while (plist != &rootlist);
+	} while (plist != &minNode->list && !dlist_empty(&minNode->list));
 
 	minNode = NULL;
 	for (i = 0; i < num; i++)
@@ -500,12 +503,18 @@ void FibHeap::FibHeapConsolidate()
 			}
 			else
 			{
-				dlist_add_before(&minNode->list, &table[i]->list);
+				dlist_add_before(&minNode->list, &((table[i])->list));
+				if (table[i]->key < minNode->key)
+				{
+					minNode = table[i];
+				}
 			}
 		}
 	}
 
 	delete[]table;
+
+	FibHeapDump(minNode);
 }
 
 FibHeapNode* FibHeap::FibHeapExtractMin() 
@@ -515,25 +524,44 @@ FibHeapNode* FibHeap::FibHeapExtractMin()
 
 	pNodeZ = minNode;
 	if (pNodeZ)
-	{
-		
-		do
+	{	
+		if (pNodeZ->first_child)
 		{
-			plist = pNodeZ->child->list.next;
-			pNodeX = container_of(plist, FibHeapNode, list);
+			//the child is present in the minNode
+			//remove child from the child list and link to the root list
+			while (!dlist_empty(&pNodeZ->first_child->sibling))
+			{
+				//link the sibling of child from child to root list
+				plist = pNodeZ->first_child->sibling.next;
+				pNodeX = container_of(plist, FibHeapNode, sibling);
+				pNodeX->parent = NULL;
+				//delete the sibling node from sibling list
+				dlist_del(plist);
+
+				//link the child node of Z to the root list
+				dlist_add_before(&minNode->list, &pNodeX->list);
+			}
+			
+			//link the first child to root list and set the child to NULL
+			pNodeX = pNodeZ->first_child;
+			dlist_add_before(&minNode->list, &pNodeX->list);
+			pNodeZ->first_child = NULL;
 			pNodeX->parent = NULL;
-			dlist_del(plist);
-			dlist_add_before(&minNode->list, plist);
-		} while (!dlist_empty(&pNodeZ->child->list));
+		} 
 
 		if (dlist_empty(&pNodeZ->list))
 		{
+			//if there is only one node in the root list, set minNode = NULL
 			minNode = NULL;
 		}
 		else
 		{
-			pNodeX = container_of(pNodeZ->list.next, FibHeapNode, list);
+			//get the next node of minNode
+			plist = pNodeZ->list.next;
+
+			//remove nodeZ from root list
 			dlist_del(&pNodeZ->list);
+			pNodeX = container_of(plist, FibHeapNode, list);
 			minNode = pNodeX;
 			FibHeapConsolidate();
 		}
@@ -546,7 +574,16 @@ FibHeapNode* FibHeap::FibHeapExtractMin()
 
 void FibHeap::FibHeapCut(FibHeapNode* pNodeX, FibHeapNode* pNodeY)
 {
-	dlist_del(&pNodeX->list);
+	//remove X from child list of Y
+	if (!dlist_empty(&pNodeX->first_child->sibling))
+	{
+		dlist_del(&pNodeX->sibling);
+	}
+	else
+	{
+		pNodeY->first_child = NULL;
+	}
+	
 	dlist_add_before(&minNode->list, &pNodeX->list);
 	pNodeX->parent = NULL;
 	pNodeX->marked = false;
@@ -585,7 +622,7 @@ void FibHeap::FibHeapDecreseKey(FibHeapNode* pNodeX, FibHeapElement newKey)
 			FibHeapCascadingCut(pNodeY);
 		}
 
-		if (pNodeX->key < minNode->key)
+		if (minNode && pNodeX->key < minNode->key)
 		{
 			minNode = pNodeX;
 		}
@@ -602,16 +639,84 @@ void FibHeap::FibHeapDestroyMinHeap(FibHeapNode* pMinHeap)
 {
 	dlist_t *plist = NULL;
 	FibHeapNode* pNode = NULL;
-
-	while (!dlist_empty(&pMinHeap->child->list))
+	if (pMinHeap->first_child)
 	{
-		plist = pMinHeap->child->list.next;
-		pNode = container_of(plist, FibHeapNode, list);
-		FibHeapDestroyMinHeap(pNode);
-		dlist_del(plist);
+		while (!dlist_empty(&pMinHeap->first_child->sibling))
+		{
+			plist = pMinHeap->first_child->sibling.next;
+			pNode = container_of(plist, FibHeapNode, sibling);
+			FibHeapDestroyMinHeap(pNode);
+			dlist_del(plist);
+		}
+
+		delete pMinHeap->first_child;
 	}
+
 	dlist_del(&pMinHeap->list);
 	delete pMinHeap;
+}
+
+bool FibHeap::FibCheckRootListDegree()
+{
+	int degree;
+	pdlist_t plist = NULL;
+	FibHeapNode* pNode = NULL;
+
+	plist = minNode->list.next;
+	degree = minNode->degree;
+	while (plist != &minNode->list)
+	{
+		pNode = container_of(plist, FibHeapNode, list);
+		if (pNode->degree >= degree)
+		{
+			return false;
+		}
+		plist = plist->next;
+		degree = pNode->degree;
+	}
+
+	return true;
+}
+
+void FibHeap::FibHeapDump(FibHeapNode* pFibHeap)
+{
+	dlist_t* plist = NULL;
+	FibHeapNode* pNode = NULL;
+
+	if (!pFibHeap)
+	{
+		return;
+	}
+	cout << "\n FibHeapDump" << endl;
+	plist = &pFibHeap->list;
+	pNode = container_of(plist, FibHeapNode, list);
+	cout << "root list node: " << endl;
+	do
+	{
+		cout << "key:" << pNode->key << endl;
+		plist = plist->next;
+		pNode = container_of(plist, FibHeapNode, list);
+	} while (pNode != pFibHeap);
+
+	cout << endl;
+
+
+	if (pFibHeap->first_child)
+	{
+		cout << "child list key: " << pFibHeap->first_child->key << endl;
+		
+		if (!dlist_empty(&pFibHeap->first_child->sibling))
+		{
+			plist = pFibHeap->first_child->sibling.next;
+			pNode = container_of(plist, FibHeapNode, sibling);
+			while (pNode != pFibHeap->first_child)
+			{
+				FibHeapDump(pNode);
+				plist = plist->next;
+				pNode = container_of(plist, FibHeapNode, sibling);
+			}
+		}
+	}
 }
 
 void FibHeap::FibHeapDestroy() 
@@ -619,13 +724,16 @@ void FibHeap::FibHeapDestroy()
 	pdlist_t plist = NULL;
 	FibHeapNode* pNode = NULL;
 
-	do 
+	while (minNode && !dlist_empty(&minNode->list))
 	{
-		plist = rootlist.next;
+		plist = minNode->list.next;
 		pNode = container_of(plist, FibHeapNode, list);
 		FibHeapDestroyMinHeap(pNode);
 		dlist_del(plist);
-	} while (dlist_empty(&rootlist));
+	} 
+
+	delete minNode;
+	minNode = NULL;
 }
 
 void FibHeapTest()
