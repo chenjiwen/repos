@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
 	idx++;
 	r2++;
 	//int num_array[16] = { 13, -3, -25, 20, -3, -16, -23, 18, 20, -7, 12, -5, -22, 15, -4, 7 };
-	int num_array[5] = { -1, -2, -3, -4, -5 };
+	int num_array[] = { -1, 3, 4, -2, -4 , 15};
 	//linklist_test();
 	int record[2];
 	int max_subseq_sum = 0;
@@ -239,9 +239,11 @@ int main(int argc, char **argv) {
 
 	//selecion_sort(5, array_a);
 
-	max_subseq_sum = find_max_sum_subsequence(num_array, 0, 4, record);
+	max_subseq_sum = find_max_sum_subsequence(num_array, 0, sizeof(num_array)/sizeof(num_array[0]) - 1, record);
 
 	cout << "max sum of subsequence is " << max_subseq_sum << ", from: " << record[0] << " to " << record[1] << endl;
+
+	max_subseq_sum = maxSubSeq(num_array, 0, sizeof(num_array) / sizeof(num_array[0]) - 1);
 
 	cout << "sorted array:" << endl;
 	for (idx = 0; idx < sizeof(array_a)/sizeof(array_a[0]); idx++)

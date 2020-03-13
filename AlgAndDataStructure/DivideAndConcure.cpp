@@ -1,3 +1,5 @@
+#include "common.h"
+
 /*
  *算法描述：
  *    最大和子序列的性质：最大和子序列是前一半的最大和子序列或者是后半部分的最大和子序列，或者
@@ -125,4 +127,29 @@ void ComplexNumMultple(double a, double b, double c, double d)
 
 	real = x - ((y - z)/2);
 	img  = x - ((y + z)/2);
+}
+
+int maxSubSeq(int array[], int i, int j)
+{
+	int maxSubSum = 0;
+	int sum = 0;
+	int idx = 0;
+
+	if (i == j)
+	{
+		return array[i];
+	}
+
+	for (idx = j - 1; idx >= i; idx--)
+	{
+		sum += array[idx];
+		if (maxSubSum < sum)
+		{
+			maxSubSum = sum;
+		}
+	}
+
+	maxSubSum += array[j];
+
+	return max(maxSubSeq(array, i, j - 1), maxSubSum);
 }

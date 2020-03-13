@@ -219,7 +219,7 @@ LinkList_T* list_swap_pairs(LinkList_T* head) {
 
 #endif
 
-
+#if 0
 struct TreeNode {
 	int val;
 	TreeNode* left;
@@ -261,9 +261,96 @@ void bst_test()
 	Solution s;
 	s.generateTrees(3);
 }
+#endif
 
-int a[8][8] = { {1, 1, 1, 0, 1, 1, 1, 0},
-				{0, 1, 0, 1, 1, 0, 1, 1},
+
+class Solution {
+public:
+	bool IsValidDecoding(const string& s)
+	{
+		long val = -1;
+
+		if (s[0] == 0)
+			return false;
+
+		val = stol(s);
+		if (val >= 1 && val <= 26)
+			return true;
+
+		return false;
+	}
+
+	int numDecodings(string s, bool y) {
+		// 特殊情况处理
+		if (s.length() == 0) return 0;
+		if (s[0] == '0') return 0;
+		if (s.length() == 1) return 1;
+		// 将 f[n] 压缩至 f[3] (仅保存 f[n - 2], f[n - 1], f[n])
+		int f[3];
+		f[2] = 1;
+		f[1] = 1;
+		for (int i = 1; i < s.length(); i++)
+		{
+			// 位移
+			f[0] = f[1];
+			f[1] = f[2];
+			// 方法判断累加
+			if (s[i] == '0') f[2] = 0;
+			int tmp = (s[i - 1] - '0') * 10 + s[i] - '0';
+			if (tmp > 9 && tmp < 27) f[2] += f[0];
+		}
+		return f[2];
+	}
+
+
+	int numDecodings(string s) {
+		string stra, strb;
+		int num = 0;
+		int i = 0;
+
+		if (s.length() == 1 || s.length() == 2)
+		{
+			if (s.length() == 1 && IsValidDecoding(s))
+			{
+				return 1;
+			}
+			else if (s.length() == 2)
+			{
+
+				if (IsValidDecoding(s) && (s != "10" && s != "20") && s[0] != '0')
+					return 2;
+				else if (s != "00" && s == "10" || s == "20")
+					return 1;
+				else if (s[0] == '0')
+					return 0;
+			}
+			else if (IsValidDecoding(s.substr(0)))
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+
+		for (i = 1; i <= 2; i++)
+		{
+			stra.assign(s, i, s.length());
+			strb.assign(s, 0, i);
+			if (IsValidDecoding(strb))
+			{
+				num += numDecodings(stra);
+			}
+		}
+
+		return num;
+	}
+};
+
+
+int a[8][8] = { {1, 1, 1, 1, 1, 1, 1, 0},
+				{0, 1, 0, 0, 0, 0, 1, 1},
 				{0, 1, 1, 0, 1, 1, 0, 1},
 				{0, 0, 1, 1, 0, 1, 1 ,1},
 				{0, 0, 0, 1, 0, 1, 1, 0},
@@ -529,16 +616,314 @@ void PuzzleSolutionDFS(PosT& start, PosT& end)
 	}
 }
 
+#define POS_BLOCKED 0
+#define POS_PASSED  1
+#define POS_VISITED 3
 
+void MazePath(int array[puzzle_array_size][puzzle_array_size], int i_s, int j_s, int i_e, int j_e, bool &found)
+{
+	bool passed = false;
+	if (i_s < 0 || j_s < 0 || i_s >= puzzle_array_size || j_s >= puzzle_array_size || a[i_s][j_s] == POS_BLOCKED || a[i_s][j_s] == POS_VISITED)
+	{
+		//当位置非法或者位置是不通或者位置已经访问过的时候，直接return
+		return ;
+	}
+
+	if (i_s == i_e && j_s == j_e)
+	{
+		//当找到通路的时候，返回
+		found = true;
+		cout << "Maze path succeed!" << endl;
+		return;
+	}
+
+	//A[i_s][j_s] == 3 表示当前节点访问过
+	a[i_s][j_s] = POS_VISITED;
+
+	cout << "(" << i_s << "," << j_s << ")" << endl;
+
+	//如果没有找到继续找
+	if(!found)
+	    MazePath(a, i_s, j_s - 1, i_e, j_e, found);
+	if (!found)
+		MazePath(a, i_s + 1, j_s, i_e, j_e, found);
+	if (!found)
+		MazePath(a, i_s, j_s + 1, i_e, j_e, found);
+	if (!found)
+		MazePath(a, i_s - 1, j_s, i_e, j_e, found);
+
+	return;
+}
+
+int BinarySearch(int numArr[], int len, int key)
+{
+	int low = 0;
+	int high = len - 1;
+	int mid = 0;
+
+	mid = (low + high) >> 1;
+
+	while (low <= high)
+	{
+		if (numArr[mid] == key)
+			return mid;
+		else if (numArr[mid] < key)
+		{
+			low = mid + 1;
+		}
+		else
+		{
+			high = mid - 1;
+		}
+
+		mid = (low + high) >> 1;
+	}
+
+	return -1;
+}
+
+int FindNumEqIndx(int numArr[], int len)
+{
+	int mid = 0;
+	int low = 0;
+	int high = len - 1;
+
+	while (low <= high)
+	{
+		mid = (low + high) >> 1;
+		if (mid == numArr[mid])
+		{
+			return mid;
+		}
+		else if (mid < numArr[mid])
+		{
+			high = mid - 1;
+		}
+		else
+		{
+			low = mid + 1;
+		}
+	}
+
+	return -1;
+}
+
+
+int minSubSum(int array[], int len)
+{
+	int thisSum = 0;
+	int minSum = 0;
+
+	int i = 0;
+	for ( i = 0; i < len; i++)
+	{
+		thisSum += array[i];
+		if (thisSum < minSum)
+		{
+			minSum = thisSum;
+		}
+		else if(thisSum > 0)
+		{
+			thisSum = 0;
+		}
+	}
+
+	return minSum;
+}
+
+int minPosSubSum(int array[], int len)
+{
+	int thisSum = 0;
+	int minSum = INT_MAX;
+
+	int i = 0;
+
+	for (i = 0; i < len; i++)
+	{
+		if (array[i] > 0)
+		{
+			thisSum += array[i];
+		}
+		else
+		{
+			if (thisSum && thisSum < minSum)
+			{
+				minSum = thisSum;
+			}
+			thisSum = 0;
+		}
+	}
+
+	if (thisSum && thisSum < minSum)
+	{
+		minSum = thisSum;
+	}
+
+	return minSum;
+}
+
+/*
+ *
+ *计算不包含0的连续子序列的最大乘积：
+ *
+ *    分情况讨论负数的情况：
+ *    1.负数为偶数，那么与全部是正序列一样
+ *    2.负数为奇数的情况
+ *
+ *    i1, i2,...j1,ih,,,ik,,,,j2,...in,,,,js....iq
+ *    其中j1,j2...js为负号的情况，s为奇数，那对对于这个序列而言，
+ *    最大值一定是从开始到i1, i2,...j(s-1)的乘积与ih,...iq的乘积中最大值
+ *
+ *    { 1, 3, -5, 2, 4, -8, -3, 1 }
+ *    举个例子，对于上面的序列，乘积的最大值一定是子序列{1, 3, -5, 2, 4, -8}与{2, 4, -8, -3, 1}中的乘积的最大值
+ *
+ *
+ *对于包含0的序列，最后只需要分段计算每一段不包含0的情况，取最大值即可
+ *
+ */
+int maxSubMult(int a[], int i, int j)
+{
+	vector<int> negVec;
+	vector<int> mulVec;
+
+	int thisMul = 1;
+	int maxMult = 0;
+	int neg = 0;
+	int tempMul = 1;
+	int lastNegIdx = -1;
+	int firstNegIdx = -1;
+
+	if (i == j)
+	{
+		return a[i];
+	}
+	else if (i > j)
+	{
+		return 0;
+	}
+
+	for (int k = i; k <= j; k++)
+	{
+		if (a[k] < 0) {
+			if (thisMul > 0)
+			{
+				mulVec.push_back(thisMul);
+			}
+			neg++;
+			negVec.push_back(k);
+			tempMul = 1;
+		}
+		else
+		{
+			tempMul *= a[k];
+		}
+
+		thisMul *= a[k];
+	}
+
+	if (neg % 2 == 0)
+	{
+		//负号的个数为偶数
+		return thisMul;
+	}
+	else
+	{
+		if (!negVec.empty())
+		{
+			lastNegIdx = negVec[negVec.size() - 1];
+			firstNegIdx = negVec[0];
+			if (lastNegIdx == j)
+			{
+				maxMult = thisMul / a[j];
+			}
+			else if (lastNegIdx == i)
+			{
+				maxMult = thisMul / a[i];
+			}
+			else
+			{
+				tempMul *= a[lastNegIdx];
+				maxMult = max(thisMul / mulVec[0], thisMul / tempMul);
+			}
+		}
+
+		return maxMult;
+	}
+}
+
+
+int maxSubMul(int a[], int len)
+{
+	int zero_idx = -1;
+	int idx = 0;
+	int maxMul = 0;
+
+	//扫描整个数组
+	while (idx < len)
+	{
+		if (!a[idx])
+		{
+			//找到了某一个位置为0，计算这个位置之前的一段不包含零的最大乘积
+			maxMul = maxSubMult(a, zero_idx + 1, idx - 1);
+			//记录0的位置
+			zero_idx = idx;
+			//取0位置之前的最大值与0二者的最大值
+			maxMul = max(maxMul, 0);
+		}
+		idx++;
+	}
+
+	if (zero_idx == -1)
+	{
+		//序列中没有零的情况
+		maxMul = maxSubMult(a, 0, len - 1);
+	}
+	else
+	{
+		//序列中最后一段没有零
+		maxMul = max(maxMul, maxSubMult(a, zero_idx + 1, len - 1));
+	}
+
+	return maxMul;
+}
+
+void GeneratePermutation()
+{
+
+}
 
 void PuzzleTest()
 {
+	bool found = false;
 	PosT start = { 0, 0 };
 	PosT end = { 7, 7 };
+	int idx = 0;
+	int array[] = { 0, 1, 3, 4, 5, 6, 7 };
+	int num_array[] = { 1, 3, -5, 2, 0, -8, -3, 1 };
+	int minNum = 0;
+
+	idx = FindNumEqIndx(array, 7);
+	minNum = minSubSum(num_array, sizeof(num_array)/sizeof(num_array[0]));
+	minNum = minPosSubSum(num_array, sizeof(num_array) /sizeof(num_array[0]));
+	//minNum = maxSubMult(num_array, 0, sizeof(num_array) / sizeof(num_array[0]) - 1);
+
+	minNum = maxSubMul(num_array, sizeof(num_array) / sizeof(num_array[0]) - 1);
+
 	puzzleInit();
 	PuzzleSolutionBFS(start, end);
 
 	puzzleInit();
 	PuzzleSolutionDFS(start, end);
-	
+
+	cout << "MazePath:" << endl;
+	MazePath(a, 0, 0, 7, 7, found);
+	if (!found)
+	{
+		cout << "No solution for the maze" << endl;
+	}
+
+	GeneratePermutation();
+
+	Solution solution;
+	minNum = solution.numDecodings("9371597631128776948387197132267188677349946742344217846154932859125134924241649584251978418763151253");
 }
