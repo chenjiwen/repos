@@ -74,6 +74,41 @@ typedef struct LinearQueue
 
 }LinearQueue_t;
 
+#define CURSOR_STACK_SIZE (10 + 1)
+#define CURSOR_STACK_NUM 3
+
+typedef int PtrToNode;
+typedef PtrToNode PositionT;
+struct StackNode {
+	StackElemType elem;
+	PositionT     next;
+};
+
+
+
+class CursorStack
+{
+public:
+	CursorStack();
+	~CursorStack();
+	void push(StackElemType elem, int sid);
+	StackElemType top(int sid);
+	bool empty(int sid);
+	void pop(int sid);
+
+protected:
+	PositionT CursorStackAlloc();
+	void CursorStackFree(PositionT);
+
+private:
+	struct StackNode base[CURSOR_STACK_SIZE];
+	int stack_size;
+	PositionT sbase[CURSOR_STACK_NUM];//stack base, record the base of each stack
+	//PositionT top[CURSOR_STACK_NUM];
+
+};
+
+
 void list_add(LinkList_T*& pList, LinkListEmemType elem);
 void list_add(struct DLinkList* pToAdd, struct DLinkList* pNode);
 void list_add(struct LinkList* pToAdd, struct LinkList* pNode);
