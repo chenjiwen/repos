@@ -521,3 +521,106 @@ void dlist_test()
 		delete plist;
 	} while (!dlist_empty(&DList1.list));
 }
+
+CursorStack::CursorStack():stack_size(CURSOR_STACK_SIZE - 1)
+{
+	int i = 0;
+	memset(base, 0, sizeof(base[0]) * CURSOR_STACK_SIZE);
+
+	for (i = 0; i < CURSOR_STACK_SIZE; i++)
+	{
+		base[i].next = (i + 1) % CURSOR_STACK_SIZE;
+	}
+
+	for (i = 0; i < CURSOR_STACK_NUM; i++)
+	{
+		sbase[i] = CursorStackAlloc();
+		base[sbase[i]].next = 0;
+	}
+}
+
+CursorStack::~CursorStack()
+{
+
+}
+
+void CursorStack::pop(int sid)
+{
+	PositionT p;
+
+	if (!empty(sid))
+	{
+		p = base[sbase[sid]].next;
+		base[sbase[sid]].next = base[p].next;
+		base[p].next = 0;
+		base[p].elem = 0;
+		CursorStackFree(p);
+	}
+}
+
+bool CursorStack::empty(int sid)
+{
+	return !base[sbase[sid]].next;
+}
+
+StackElemType CursorStack::top(int sid)
+{
+	if (!empty(sid))
+	{
+		return base[base[sbase[sid]].next].elem;
+	}
+
+	return 0;
+}
+
+
+void CursorStack::push(StackElemType elem, int sid)
+{
+	PositionT p = CursorStackAlloc();
+
+	base[p].elem = elem;
+	base[p].next = base[sbase[sid]].next;
+
+	base[sbase[sid]].next = p;
+}
+
+PositionT CursorStack::CursorStackAlloc()
+{
+	if (!stack_size)
+	{
+		return 0;
+	}
+
+	PositionT p;
+
+	p = base[0].next;
+	base[0].next = base[p].next;
+	base[p].next = 0;
+	stack_size--;
+
+	return p;
+}
+
+void CursorStack::CursorStackFree(PositionT p)
+{
+	base[p].next = base[0].next;
+	base[0].next = p;
+	stack_size++;
+}
+
+void CursorStackTest()
+{
+	CursorStack cstack;
+
+	cstack.push((void*)1, 0);
+	cstack.push((void*)2, 1);
+	cstack.push((void*)3, 2);
+
+	cstack.push((void*)4, 0);
+	cstack.push((void*)5, 1);
+	cstack.push((void*)6, 2);
+
+	cstack.pop(0);
+	cstack.pop(1);
+	cstack.pop(2);
+}

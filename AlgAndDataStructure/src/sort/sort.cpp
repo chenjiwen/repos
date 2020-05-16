@@ -141,18 +141,47 @@ void merge_sort(int array_len, uint32_t array[]) {
     merge_sort_internal(0, array_len - 1, array);
 }
 
+
+int quickPartition(int A[], int left, int right)
+{
+    int pivot;
+    int i, j;
+
+    pivot = A[(right + left) >> 1];//choose the medium as the pivot
+    i = left;                    //from the begin of A
+    j = right;              //from the end of A
+
+    while (i < j) {
+        if (A[i] < pivot)
+            i++;
+        else if (A[j] > pivot)
+            j--;
+        else if (A[i] == A[j])
+        {
+            if(i - left < right - j)
+                i++;
+            else
+                j--;
+        }
+        else
+            swap(A[i], A[j]);
+    }
+    //A[i] = pivot;
+    return i;
+}
+
 /*
  *快速排序中的划分算法：
  *    划分把数组分成两个部分，前半部分小于给定的元素，后半部分不小于给定的元素，该函数同时返回给定元素哨兵在划分中的位置.
  *    从头部中，把不小于给定哨兵元素交换到尾部，
  *    从尾部中，把小于给定哨兵元素交换到头部
  */
-int quick_sort_partition(int left_idx, int right_idx, uint32_t array[]) 
+int quick_sort_partition(int left_idx, int right_idx, int array[]) 
 {
-    uint32_t sentential = 0;
+    int sentential = 0;
     int idx = 0;
     int sentential_idx = 0;
-    uint32_t temp = 0;
+    int temp = 0;
     int mid = 0;
 
     //
@@ -175,7 +204,8 @@ int quick_sort_partition(int left_idx, int right_idx, uint32_t array[])
             //当前的头部元素不小于哨兵元素，从尾部找出尾部小于给定元素的位置
             while ((right_idx > idx) && (array[right_idx] >= sentential))
                 right_idx--;
-
+            if (sentential == array[right_idx])
+                sentential_idx = right_idx;
             //找到了一个小于哨兵的元素，与前半部的小于哨兵元素交换
 			if (right_idx != idx)
 			{
@@ -188,14 +218,21 @@ int quick_sort_partition(int left_idx, int right_idx, uint32_t array[])
         }
 
     }
-
+    if (array[idx] < sentential)
+    {
+        swap(array[++idx], array[sentential_idx]);
+    }
+    else
+    {
+        swap(array[idx], array[sentential_idx]);
+    }
     return idx;
 }
 
-static int quick_sort_tail_partion(int left_idx, int right_idx, uint32_t array[])
+static int quick_sort_tail_partion(int left_idx, int right_idx, int array[])
 {
-    uint32_t pivot_element = 0;
-    uint32_t temp;
+    int pivot_element = 0;
+    int temp;
     int i = 0, j = 0;
 
     //i 用于保存当前小于pivot_element = array[right_idx]的位置
@@ -215,7 +252,7 @@ static int quick_sort_tail_partion(int left_idx, int right_idx, uint32_t array[]
         }
     } 
 
-    //i为小于pivot的当前文职， i 到rihgt_idx都是大于等于pivot，i + 1位置与最后的pivot交换
+    //i为小于pivot的当前位置， i 到rihgt_idx都是大于等于pivot，i + 1位置与最后的pivot交换
     temp = array[right_idx];
     array[right_idx] = array[i + 1];
     array[i + 1] = temp;
@@ -223,14 +260,14 @@ static int quick_sort_tail_partion(int left_idx, int right_idx, uint32_t array[]
     return i + 1;
 }
 
-void quick_sort(int left, int right, uint32_t array[])
+void quick_sort(int left, int right, int array[])
 {
     int idx = 0;
 
     if (left >= right)
         return;
 
-    idx = quick_sort_tail_partion(left, right, array);
+    idx = quick_sort_partition(left, right, array);
 
     quick_sort(left, idx - 1, array);
     quick_sort(idx + 1, right, array);
@@ -284,7 +321,7 @@ uint32_t select_kth(int k, int left, int right, uint32_t array[]) {
 
     do 
     {
-        i = quick_sort_partition(left, right, array);
+        i = quick_sort_partition(left, right,(int*) array);
 
         //划分的位置小于k，则说明当前返回的位置的元素小于第k大的元素
         //从当前位置往后继续寻找
@@ -339,7 +376,7 @@ bool isPossibleDivide(int nums[], int len, int k) {
 		return false;
 	}
 
-	quick_sort(0, len - 1, (uint32_t*)nums);
+	quick_sort(0, len - 1, (int*)nums);
 
     //fill the table in column
     //i_row用于记录row

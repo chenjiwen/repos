@@ -349,6 +349,113 @@ public:
 };
 
 
+/**
+ * Definition for singly-linked list.
+ */
+  typedef struct ListNode {
+     int val;
+     ListNode *next;
+     ListNode(int x=0) : val(x), next(NULL) {}
+	 
+  }ListNode;
+
+  struct ListNode* ListNodeAdd(struct ListNode* list, int x);
+
+  struct ListNode* ListNodeAdd(struct ListNode *list, int x)
+  {
+	  struct ListNode* p, *q;
+
+	  p = new ListNode;
+	  p->next = NULL;
+	  p->val = x;
+
+	  if (!list)
+	  {
+		  return p;
+	  }
+
+	  q = list;
+	  while (q->next)
+		  q = q->next;
+
+
+	  q->next = p;
+
+	  return list;
+  }
+
+class SolutionList {
+public:
+	ListNode* partition(ListNode* head, int x) {
+		ListNode* p, * q, * r, * h = NULL, * prev, * s;
+
+		p = NULL;
+		q = head;
+		prev = NULL;
+		r = NULL;
+
+		while (q)
+		{
+			if (q->val >= x)
+			{
+				if (r == NULL)
+					r = q;
+				prev = q;
+				q = q->next;
+			}
+			else if (q->val < x)
+			{
+				if (h == NULL)
+				{
+					p = q;
+					h = p;
+					if (prev)
+						prev->next = q->next;
+					s = q->next;
+					if (r)
+						q->next = r;
+					q = s;
+				}
+				else if (p->next == q)
+				{
+					p = q;
+					q = q->next;
+				}
+				else
+				{
+					s = q->next;
+					prev->next = s;
+					if (p)
+					{
+						q->next = r;
+						p->next = q;
+						p = p->next;
+					}
+					q = s;
+				}
+			}
+		}
+
+		head = h;
+		return head;
+	}
+};
+
+
+void ListNodeTest()
+{
+	int a[] = { 1, 4, 3, 2, 5, 2 };
+	struct ListNode* list = NULL;
+	SolutionList s;
+
+	for (int i= 0; i < 6; i++)
+	{
+		list = ListNodeAdd(list, a[i]);
+	}
+
+	s.partition(list, 3);
+}
+
 int a[8][8] = { {1, 1, 1, 1, 1, 1, 1, 0},
 				{0, 1, 0, 0, 0, 0, 1, 1},
 				{0, 1, 1, 0, 1, 1, 0, 1},
@@ -892,6 +999,34 @@ void GeneratePermutation()
 
 }
 
+void FindSum(int array[], int len, int val, int &start, int &end)
+{
+	int sum = 0;
+	int i = 0;
+	start = 0;
+	end = 0;
+
+	for (i = 0; i < len;)
+	{
+		sum += array[i];
+		if (sum == val)
+		{
+			end = i;
+			break;
+		}
+		else if (sum > val)
+		{
+			sum -= array[start];
+			start++;
+		}
+		else
+		{
+			i++;
+		}
+	}
+}
+
+
 void PuzzleTest()
 {
 	bool found = false;
@@ -924,6 +1059,8 @@ void PuzzleTest()
 
 	GeneratePermutation();
 
-	Solution solution;
-	minNum = solution.numDecodings("9371597631128776948387197132267188677349946742344217846154932859125134924241649584251978418763151253");
+	ListNodeTest();
+
+	//Solution solution;
+	//minNum = solution.numDecodings("9371597631128776948387197132267188677349946742344217846154932859125134924241649584251978418763151253");
 }

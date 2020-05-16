@@ -109,7 +109,41 @@ extern void BNHeapTest();
 extern void graphic_test();
 extern void graph_test();
 extern void PuzzleTest();
+extern void CursorStackTest();
 
+int gArray[] =
+{
+-9,-13,-20,8,-18,
+-9,8, 14, -5, 11,
+-4,-18, 13, 17,-10,
+-1,-13, 15,6, 18,
+-3,-17, 11, 17,6,
+18, 10,-12, 16,-15,
+5,13,-16, 16,2,
+18,-14,7,3, -1,
+-8,-20,7,-17, 19,
+-12,-17,-13,4,7,
+16, 11, 20, -5,-15,
+17,-15,7, 10,-17,
+17, 10,-11,-11, 18,
+-18,8,-12,-15,-13,
+18,-15, 18, -4,7,
+12,0, 14,-15,3,
+10,-13, -5, -3,-18,
+-3,2, 20,2,5,
+8,7,2, -8,2,
+-12,7,-20,-19, 18
+};
+
+
+int gArrayA[] =
+{
+	3,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,1,1,
+	1,1,3,3,3,1,1,3,
+	1,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,1,3
+};
 int main(int argc, char **argv) {
 	uint32_t array_a[5] = {1, 2, 3, 4, 5};
 	uint32_t array_b[5] = {7, 8, 6, 10, 9};
@@ -235,7 +269,7 @@ int main(int argc, char **argv) {
 	//merge_sort(5, array_a);
 	//merge_sort(5, array_b);
 
-	//quick_sort(0, 4, array_a);
+	quick_sort(0, 99, gArray);
 
 	//selecion_sort(5, array_a);
 
@@ -252,6 +286,7 @@ int main(int argc, char **argv) {
 	}
 	cout << endl;
 
+	CursorStackTest();
 
 	return 0;
 }
